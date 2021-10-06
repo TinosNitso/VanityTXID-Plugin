@@ -23,7 +23,7 @@ std::string FromHex(std::string Hex){
     } return String;
 }
 void Hasher(int ThreadN,char **argv) {
-    int Threads=FromHex(std::string(argv[1]))[0]+1;
+    int Threads=uint8_t(FromHex(std::string(argv[1]))[0])+1;
     int P1=FromHex(std::string(argv[2]))[0];
     std::string Pattern=argv[3];
     std::string String=FromHex(argv[4]);
@@ -79,7 +79,7 @@ void Hasher(int ThreadN,char **argv) {
     system("taskkill /IM VanityTXID-Plugin.exe /F >nul 2>&1");
 }
 int main(int argc , char **argv){
-    int Threads=FromHex(std::string(argv[1]))[0]+1;
+    int Threads=uint8_t(FromHex(std::string(argv[1]))[0])+1;
     std::thread Thread[Threads];
     for (int ThreadN=0;ThreadN<Threads;ThreadN++){
         Thread[ThreadN]=std::thread(Hasher,ThreadN,argv);

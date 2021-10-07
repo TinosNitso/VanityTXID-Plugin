@@ -1,7 +1,7 @@
 # VanityTXID-Plugin
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 
-Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for Electron Cash on Windows (BCH). Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT: www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
+Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for Electron Cash on Windows (BCH). Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
 v1.0.2 notes:
 - Nonce position can now be up to 256**2, so the input being "mined" doesn't have to be the first. (There was also a bug in the C++ binary of v1.0.1.) e.g. in www.blockchain.com/bch/tx/0000006727815232d1fd48e1988b9aea8b3e4cd060dfbe44c4a52239c71b5cd5 'deadbeef' doesn't appear until the 2nd input.

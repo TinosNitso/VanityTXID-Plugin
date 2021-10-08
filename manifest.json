@@ -1,0 +1,9 @@
+{
+    "display_name": "VanityTXID",
+    "version": "1.0.3",
+    "description": "Generate TX which has ID starting with any choice of hex digits. Currently Windows only. First generate P2SH address which gets imported into a watching-only wallet, from which raw TX hex is copied to the original wallet, to be signed & mined.",
+    "project_url": "https://github.com/TinosNitso/VanityTXID-Plugin",
+    "minimum_ec_version": "3.2",
+    "package_name": "VanityTXID",
+    "available_for": ["qt"]
+}

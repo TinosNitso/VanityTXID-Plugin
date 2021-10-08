@@ -1,5 +1,5 @@
 # VanityTXID-Plugin
-main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03mingw-nosetup.zip'.
+main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03mingw-nosetup.zip'. The example below has nonce '0a00000000017409'. '0a' means the eleventh thread, out of 'ff'->256 threads, flushed the correct nonce to Python first, in about ten seconds. (I don't recommend 256 threads, btw.)
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 

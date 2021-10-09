@@ -1,9 +1,15 @@
 # VanityTXID-Plugin
-main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03mingw-nosetup.zip'. The example below has nonce '0a00000000017409'. '0a' means the eleventh thread, out of 'ff'->256 threads, flushed the correct nonce to Python first, in under ten seconds. (I don't recommend 256 threads, btw.)
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for Electron Cash on Windows (BCH). Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
+
+main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03mingw-nosetup.zip'. The example below has nonce '0a00000000017409'. '0a' means the eleventh thread, out of 'ff'->256 threads, flushed the correct nonce to Python first, in under ten seconds. (I don't recommend 256 threads, btw.)
+
+v1.1.0 notes:
+- Linux now supported. Linux binary is about 17% faster. I dunno why.
+- Downgraded Windows binary to 32 bit from 64 bit, since EC is only 32 bit on Windows.
+- Simplified C++ using exit(0).
 
 v1.0.3 notes:
 - We can now instantly convert any number of addresses by first selecting them in the Addresses tab and then copy-paste all of them over to the Address Converter in VanityTXID.

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <unistd.h>
 #include "sha256.cpp"
 
 std::string FromHex(std::string Hex){
@@ -70,13 +71,13 @@ void Hasher(int ThreadN,char **argv) {
     char Return[2*String.length()];
     for (int i = 0; i < String.length(); i++)
         sprintf(Return+2*i, "%02x", (uint8_t) String[i]);
-    std::cout<<Return<<std::flush;
-    system("taskkill /IM VanityTXID-Plugin.exe /F >nul 2>&1");
+    std::cout<<Return;
+    exit(0);
 }
 int main(int argc , char **argv){
     int Threads=(uint8_t)FromHex(argv[1])[0]+1;
     std::thread Thread[Threads];
-    for (uint8_t ThreadN=0;ThreadN<Threads;ThreadN++){
+    for (uint8_t ThreadN=0;ThreadN<Threads;ThreadN++)
         Thread[ThreadN]=std::thread(Hasher,ThreadN,argv);
-    }   Thread[0].join();
+    Thread[0].join();
 }

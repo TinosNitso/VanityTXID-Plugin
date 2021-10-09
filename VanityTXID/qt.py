@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton
 from electroncash.i18n import _
 from electroncash.plugins import BasePlugin, hook
-import electroncash, subprocess, multiprocessing, threading, zipfile, shutil
+import electroncash, subprocess, multiprocessing, threading, zipfile, shutil, os
 from electroncash import bitcoin
 
 class Plugin(BasePlugin):
@@ -15,7 +15,7 @@ class Plugin(BasePlugin):
     def on_close(self):
         """BasePlugin callback called when the wallet is disabled among other things."""
         for window in list(self.wallet_windows.values()): self.close_wallet(window.wallet)
-        shutil.rmtree(self.parent.get_external_plugin_dir()+'\\VanityTXID')
+        shutil.rmtree(self.parent.get_external_plugin_dir()+'/VanityTXID')
     @hook
     def init_qt(self, qt_gui):
         """Hook called when a plugin is loaded (or enabled)."""
@@ -23,10 +23,11 @@ class Plugin(BasePlugin):
         if len(self.wallet_windows):
             return
         Dir=self.parent.get_external_plugin_dir()
-        Zip=zipfile.ZipFile(Dir+'\\VanityTXID-Plugin.zip')
+        Zip=zipfile.ZipFile(Dir+'/VanityTXID-Plugin.zip')
         for Item in Zip.namelist(): 
-            if 'bin' in Item: Zip.extract(Item,Dir+'\\VanityTXID')
+            if 'bin' in Item: Zip.extract(Item,Dir+'/VanityTXID')
         Zip.close()
+        if os.name is not 'nt': subprocess.Popen(['chmod','+x',Dir+'/VanityTXID/bin/VanityTXID-Plugin'])
         # These are per-wallet windows.
         for window in qt_gui.windows:
             self.load_wallet(window.wallet, window)
@@ -39,10 +40,11 @@ class Plugin(BasePlugin):
         tab = window.create_list_tab(l)
         self.wallet_payment_tabs[wallet_name] = tab
         self.wallet_payment_lists[wallet_name] = l
-        window.tabs.addTab(tab, QIcon(self.parent.get_external_plugin_dir()+"\\VanityTXID\\bin\\Icon.ico"), 'VanityTXID')
+        window.tabs.addTab(tab, QIcon(self.parent.get_external_plugin_dir()+"/VanityTXID/bin/Icon.ico"), 'VanityTXID')
     @hook
     def close_wallet(self, wallet):
-        subprocess.Popen('TaskKill /IM VanityTXID-Plugin.exe /F',creationflags=subprocess.CREATE_NO_WINDOW)
+        if os.name is 'nt': subprocess.Popen('TaskKill /IM VanityTXID-Plugin.exe /F',creationflags=subprocess.CREATE_NO_WINDOW)
+        else: subprocess.Popen(['pkill','VanityTXID'])
         wallet_name = wallet.basename()
         window = self.wallet_windows[wallet_name]
         del self.wallet_windows[wallet_name]
@@ -61,12 +63,12 @@ class Ui(QDialog):
         VBox = QVBoxLayout()
         self.setLayout(VBox)
         
-        Title=QLabel('VanityTXID v1.0.3');
+        Title=QLabel('VanityTXID v1.1.0');
         Title.setAlignment(Qt.AlignCenter)
         VBox.addWidget(Title)
 
         AddressesLabel=QLabel(_('VanityTXID Addresses: '))
-        ConverterLabel=QLabel(_('Address converter: '))
+        ConverterLabel=QLabel(_('Address Converter: '))
         AddressesLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         ConverterLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         VBoxAddressesLabels=QVBoxLayout()
@@ -192,8 +194,8 @@ class Ui(QDialog):
             if Input['signatures']==[None]: 
                 window.show_transaction(TX) # More sigs needed, return.
                 return     
-        Pattern=' '+self.Pattern.text()
-        if Pattern==' ':
+        Pattern=self.Pattern.text()
+        if len(Pattern) is 0:
             window.show_transaction(TX)     #Empty Pattern, return
             return
             
@@ -207,15 +209,19 @@ class Ui(QDialog):
                 Input['scriptSig']=bitcoin.int_to_hex(MessageSize)+Message+'080000000000000000'+SigScript
                 break
         TX=electroncash.Transaction(TX.serialize())
-        NoncePos=' '+bitcoin.rev_hex(bitcoin.int_to_hex(int(TX.raw.find(SigScript)/2)-8,2))
+        NoncePos=bitcoin.rev_hex(bitcoin.int_to_hex(int(TX.raw.find(SigScript)/2)-8,2))
 
-        Threads=' '+bitcoin.int_to_hex(int(self.Threads.text())-1)    #I figure ' 00' means 1 since highest index is specified to C++ binary.    
+        Threads=bitcoin.int_to_hex(int(self.Threads.text())-1)    #I figure ' 00' means 1 since highest index is specified to C++ binary.    
         Dir=self.plugin.parent.get_external_plugin_dir()
-        Command='"'+Dir+'\\VanityTXID\\bin\\VanityTXID-Plugin.exe"'+Threads+NoncePos+Pattern+' '+TX.raw
-        Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS)
+        if os.name is 'nt':
+            Command='"'+Dir+'/VanityTXID/bin/VanityTXID-Plugin.exe"'+' '+Threads+' '+NoncePos+' '+Pattern+' '+TX.raw
+            Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS)
+        else:
+            Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',''+Threads,''+NoncePos,Pattern,TX.raw]
+            Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
         threading.Thread(target=self.Bin,args=(Process,len(TX.raw))).start()
         
-        self.Button.setText('TaskKill')
+        self.Button.setText('Cancel')
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Cancel)
     def Bin(self,Process,lenTX):
@@ -226,7 +232,9 @@ class Ui(QDialog):
     def ShowTX(self):
         try: self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))
         except: return
-    def Cancel(self): subprocess.Popen('TaskKill /IM VanityTXID-Plugin.exe /F',creationflags=subprocess.CREATE_NO_WINDOW)
+    def Cancel(self):
+        if os.name is 'nt': subprocess.Popen('TaskKill /IM VanityTXID-Plugin.exe /F',creationflags=subprocess.CREATE_NO_WINDOW)
+        else: subprocess.Popen(['pkill','VanityTXID'])
     def AddressGen(self):
         wallet=self.window.wallet
         for Word in self.Converter.text().split():   #Generate many addresses simultaneously.

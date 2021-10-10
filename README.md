@@ -2,7 +2,7 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 
-Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for Electron Cash on Windows (BCH). Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
+Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for (BCH) Electron Cash on Linux & Windows. Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
 main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. The screenshot example has nonce '0a00000000017409'. '0a' means the eleventh thread, out of 'ff'->256 threads, flushed the correct nonce to Python first, in under ten seconds. (I don't recommend 256 threads, btw.)
 

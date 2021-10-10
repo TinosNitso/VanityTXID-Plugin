@@ -4,7 +4,7 @@
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for (BCH) Electron Cash on Linux & Windows. Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
-main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiler uses only main.cpp. The screenshot example has nonce '0400000002054ba8'. '04' corresponds to the fifth thread.
+main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiler uses only main.cpp. The screenshot example has nonce '0400000002054ba8'. '04' corresponds to the fifth thread. v1.1.0 SHA256 Checksum: a6c4e675b2516cfc4c0839198126c192bbb646430c60febc4bdf5a2b198524a6
 
 v1.1.0 notes:
 - Linux now supported. Linux binary is about 17% faster. I dunno why.
@@ -19,7 +19,7 @@ v1.0.3 notes:
 I've been trying to get some virtual machines working, but VirtualBox was too difficult, so now I'm learning to use Hyper-V. First I'm gonna test Windows XP. I think I'll try get hash rate before adding Linux support.
 
 v1.0.2 notes:
-- Nonce position can now be up to 256**2, so the input being "mined" doesn't have to be the first. (There was also a bug in the C++ binary of v1.0.1.) e.g. in www.blockchain.com/bch/tx/0000006727815232d1fd48e1988b9aea8b3e4cd060dfbe44c4a52239c71b5cd5 'deadbeef' doesn't appear until the 2nd input.
+- Nonce position can now be up to 256**2, so the input being "mined" doesn't have to be the first. (There was also a bug in the C++ binary of v1.0.1) e.g. now in www.blockchain.com/bch/tx/0000006727815232d1fd48e1988b9aea8b3e4cd060dfbe44c4a52239c71b5cd5 'deadbeef' doesn't appear until the 2nd input.
 - Improved code so that raw TX hex can be repeatedly mined (copy-paste after mining, and then again etc).
 - Full support for legacy P2SH form (starting with '3' instead of 'p').
 - Multiple P2SH address display, but generating lots of addresses at once will be in next update.

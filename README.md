@@ -1,6 +1,6 @@
 # VanityTXID-Plugin
 
-Security issue: I need to update to use gc.collect() to erase all password and privkey variables, o'wise Python's del may not permamenently erase them from RAM. Oops!
+Security issue: I should update to use gc.collect() to further erase all password and privkey variables, otherwise Python's del may not permamenently erase them from RAM, unless EC does it. Oops!
 
 License issue: I failed to mention in all the releases that this project has copied from qt.py from the plugin template released by Karol Trzeszczkowski (GNU GPL v3). I don't fully understand that code, yet. github.com/KarolTrzeszczkowski/Electron-Cash-Plugin-Template
 

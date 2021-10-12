@@ -1,5 +1,13 @@
 # VanityTXID-Plugin
 
+To-do list:
+- Mac OS X support. I've spent days trying to get OS X to work, and have failed. Causing a massive delay!
+- There's a bug where if you close the watching-only wallet, it cancels the mining on the other wallet. Closing windows is mistaken for ordering cancellation.
+- Overwrite Password & PrivKey with data, to erase them instead of just deleting, whatever that means.
+- 255 vs 256 threads causes a bug in the Linux binary. Will fix.
+- Use some const final code in C++ code.
+- Sign P2PKH along with P2SH, without having to separately sign using EC standard.
+
 License issue: I failed to mention in all the releases that this project has copied from qt.py from the plugin template released by Karol Trzeszczkowski (GNU GPL v3). I don't fully understand that code, yet. github.com/KarolTrzeszczkowski/Electron-Cash-Plugin-Template
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)

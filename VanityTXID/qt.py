@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton
 from electroncash.i18n import _
 from electroncash.plugins import BasePlugin, hook
-import electroncash, subprocess, multiprocessing, threading, zipfile, shutil, os
+import electroncash, subprocess, multiprocessing, threading, zipfile, shutil, os, gc
 from electroncash import bitcoin
 
 class Plugin(BasePlugin):
@@ -27,7 +27,9 @@ class Plugin(BasePlugin):
         for Item in Zip.namelist(): 
             if 'bin' in Item: Zip.extract(Item,Dir+'/VanityTXID')
         Zip.close()
-        if os.name is not 'nt': subprocess.Popen(['chmod','+x',Dir+'/VanityTXID/bin/VanityTXID-Plugin'])
+        if 'nt' not in os.name:
+            if 'Darwin' in os.uname().sysname: subprocess.Popen(['chmod','755',Dir+'/VanityTXID/bin/VanityTXID-Plugin.app'])
+            else: subprocess.Popen(['chmod','+x',Dir+'/VanityTXID/bin/VanityTXID-Plugin'])
         # These are per-wallet windows.
         for window in qt_gui.windows:
             self.load_wallet(window.wallet, window)
@@ -43,9 +45,8 @@ class Plugin(BasePlugin):
         window.tabs.addTab(tab, QIcon(self.parent.get_external_plugin_dir()+"/VanityTXID/bin/Icon.ico"), 'VanityTXID')
     @hook
     def close_wallet(self, wallet):
-        if os.name is 'nt': subprocess.Popen('TaskKill /IM VanityTXID-Plugin.exe /F',creationflags=subprocess.CREATE_NO_WINDOW)
-        else: subprocess.Popen(['pkill','VanityTXID'])
         wallet_name = wallet.basename()
+        self.wallet_payment_lists[wallet_name].Process.terminate()
         window = self.wallet_windows[wallet_name]
         del self.wallet_windows[wallet_name]
         wallet_tab = self.wallet_payment_tabs.get(wallet_name, None)
@@ -63,7 +64,7 @@ class Ui(QDialog):
         VBox = QVBoxLayout()
         self.setLayout(VBox)
         
-        Title=QLabel('VanityTXID v1.1.0');
+        Title=QLabel('VanityTXID v1.2.0');
         Title.setAlignment(Qt.AlignCenter)
         VBox.addWidget(Title)
 
@@ -183,11 +184,14 @@ class Ui(QDialog):
                 except: Password=None   #Bad Password.
             if wallet.is_schnorr_enabled(): Sig=electroncash.schnorr.sign(PrivKey,bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
             else: Sig=TX._ecdsa_sign(PrivKey,bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
+            PrivKey='0'*52  #Permanently erase memory with 52 characters.
             del(PrivKey)
             
             Input['scriptSig']=bitcoin.int_to_hex(MessageSize)+Message+'00'+bitcoin.int_to_hex(len(Sig)+1)+Sig.hex()+'41'+bitcoin.int_to_hex(int(len(script)/2))+script
             TX.inputs()[InputN]=Input
+        Password='0'*52 #Permanently erase memory.
         del(Password)
+        gc.collect()    #Garbage Collector for PrivKey & Password memory allocation.
         TX=electroncash.Transaction(TX.serialize())
         
         for Input in TX.inputs():
@@ -213,28 +217,26 @@ class Ui(QDialog):
 
         Threads=bitcoin.int_to_hex(int(self.Threads.text())-1)    #I figure ' 00' means 1 since highest index is specified to C++ binary.    
         Dir=self.plugin.parent.get_external_plugin_dir()
-        if os.name is 'nt':
-            Command='"'+Dir+'/VanityTXID/bin/VanityTXID-Plugin.exe"'+' '+Threads+' '+NoncePos+' '+Pattern+' '+TX.raw
-            Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS)
+        Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',Threads,NoncePos,Pattern,TX.raw]
+        if 'nt' in os.name:
+            Command[0]+='.exe'
+            self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS)
         else:
-            Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',''+Threads,''+NoncePos,Pattern,TX.raw]
-            Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-        threading.Thread(target=self.Bin,args=(Process,len(TX.raw))).start()
+            if 'Darwin' in os.uname().sysname: Command[0]+='.app'
+            self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
+        threading.Thread(target=self.Bin,args=[len(TX.raw)]).start()
         
-        self.Button.setText('Cancel')
+        self.Button.setText('.terminate')
         self.Button.clicked.disconnect()
-        self.Button.clicked.connect(self.Cancel)
-    def Bin(self,Process,lenTX):
-        self.HiddenBox.setPlainText(str(Process.communicate()[0])[2:2+lenTX])
+        self.Button.clicked.connect(self.Process.terminate)
+    def Bin(self,lenTX):
+        self.HiddenBox.setPlainText(str(self.Process.communicate()[0])[2:2+lenTX])
         self.Button.setText('Sign and/or Mine')
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Clicked)
     def ShowTX(self):
         try: self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))
         except: return
-    def Cancel(self):
-        if os.name is 'nt': subprocess.Popen('TaskKill /IM VanityTXID-Plugin.exe /F',creationflags=subprocess.CREATE_NO_WINDOW)
-        else: subprocess.Popen(['pkill','VanityTXID'])
     def AddressGen(self):
         wallet=self.window.wallet
         for Word in self.Converter.text().split():   #Generate many addresses simultaneously.

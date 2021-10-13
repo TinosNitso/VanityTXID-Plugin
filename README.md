@@ -1,20 +1,18 @@
 # VanityTXID-Plugin
 
-To-do list:
-- Mac OS X support. I've spent days trying to get OS X to work, and have failed. Causing a massive delay!
-- There's a bug where if you close the watching-only wallet, it cancels the mining on the other wallet. Closing windows is mistaken for ordering cancellation.
-- Overwrite Password & PrivKey with data, to erase them instead of just deleting, whatever that means.
-- 255 vs 256 threads causes a bug in the Linux binary. Will fix.
-- Use some const final code in C++ code.
-- Sign P2PKH along with P2SH, without having to separately sign using EC standard.
-
-License issue: I failed to mention in all the releases that this project has copied from qt.py from the plugin template released by Karol Trzeszczkowski (GNU GPL v3). I don't fully understand that code, yet. github.com/KarolTrzeszczkowski/Electron-Cash-Plugin-Template
-
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Currently only available for (BCH) Electron Cash on Linux & Windows. Written in Python & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can also create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
 main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiler uses only main.cpp. The screenshot example has nonce '0400000002054ba8'. '04' corresponds to the fifth thread. v1.1.0 SHA256 Checksum: a6c4e675b2516cfc4c0839198126c192bbb646430c60febc4bdf5a2b198524a6
+
+v1.2.0 notes:
+- Full support for macOS, version High Sierra and newer.
+- Bug fixed where closing irrelevant wallets cancels mining. Simplified Python code.
+- Password & PrivKey are now overwritten before being deleted, and then Garbage Collected.
+- C++ code simplified by using const nonce position.
+- All C++ warnings resolved.
+- New license file mentions copied plugin template code. github.com/KarolTrzeszczkowski/Electron-Cash-Plugin-Template
 
 v1.1.0 notes:
 - Linux now supported. Linux binary is about 17% faster. I dunno why.

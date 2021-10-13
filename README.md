@@ -1,6 +1,6 @@
 # VanityTXID-Plugin
 
-When reinstalling the plugin I've noticed a sporadic bug where users may have to close and then re-open their wallet.
+When uninstalling the latest version there's a new error - I'll fix it in the next update. (To reinstall user should close and re-open the wallet.) It's because it tries to cancel the mining process when it isn't happening.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 

@@ -1,0 +1,2 @@
+Most of the "class Plugin(BasePlugin):" code is copied from the plugin template at https://github.com/KarolTrzeszczkowski/Electron-Cash-Plugin-Template
+which is licensed under GPLv3.

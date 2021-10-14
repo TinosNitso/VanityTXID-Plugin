@@ -19,20 +19,17 @@ class Plugin(BasePlugin):
     @hook
     def init_qt(self, qt_gui):
         """Hook called when a plugin is loaded (or enabled)."""
-        # We get this multiple times.  Only handle it once, if unhandled.
-        if len(self.wallet_windows):
-            return
+        if len(self.wallet_windows): return # We get this multiple times.  Only handle it once, if unhandled.
         Dir=self.parent.get_external_plugin_dir()
         Zip=zipfile.ZipFile(Dir+'/VanityTXID-Plugin.zip')
         for Item in Zip.namelist(): 
             if 'bin' in Item: Zip.extract(Item,Dir+'/VanityTXID')
         Zip.close()
         if 'nt' not in os.name:
-            if 'Darwin' in os.uname().sysname: subprocess.Popen(['chmod','755',Dir+'/VanityTXID/bin/VanityTXID-Plugin.app'])
-            else: subprocess.Popen(['chmod','+x',Dir+'/VanityTXID/bin/VanityTXID-Plugin'])
-        # These are per-wallet windows.
-        for window in qt_gui.windows:
-            self.load_wallet(window.wallet, window)
+            Exec=Dir+'/VanityTXID/bin/VanityTXID-Plugin'
+            if 'Darwin' in os.uname().sysname: subprocess.Popen(['chmod','755',Exec+'.app'])
+            else: subprocess.Popen(['chmod','+x',Exec])
+        for window in qt_gui.windows: self.load_wallet(window.wallet, window)           # These are per-wallet windows.
     @hook
     def load_wallet(self, wallet, window):
         """Hook called when a wallet is loaded and a window opened for it."""
@@ -43,18 +40,19 @@ class Plugin(BasePlugin):
         self.wallet_payment_tabs[wallet_name] = tab
         self.wallet_payment_lists[wallet_name] = l
         window.tabs.addTab(tab, QIcon(self.parent.get_external_plugin_dir()+"/VanityTXID/bin/Icon.ico"), 'VanityTXID')
+        tab.update()
     @hook
     def close_wallet(self, wallet):
         wallet_name = wallet.basename()
-        self.wallet_payment_lists[wallet_name].Process.terminate()
+        try: self.wallet_payment_lists[wallet_name].Process.terminate()
+        except: pass
         window = self.wallet_windows[wallet_name]
         del self.wallet_windows[wallet_name]
         wallet_tab = self.wallet_payment_tabs.get(wallet_name, None)
         if wallet_tab is not None:
             del self.wallet_payment_lists[wallet_name]
             del self.wallet_payment_tabs[wallet_name]
-            i = window.tabs.indexOf(wallet_tab)
-            window.tabs.removeTab(i)
+            window.tabs.removeTab(window.tabs.indexOf(wallet_tab))
 class Ui(QDialog):
     def __init__(self, window, plugin):
         QDialog.__init__(self, window)
@@ -64,7 +62,7 @@ class Ui(QDialog):
         VBox = QVBoxLayout()
         self.setLayout(VBox)
         
-        Title=QLabel('VanityTXID v1.2.0');
+        Title=QLabel('VanityTXID v1.2.1');
         Title.setAlignment(Qt.AlignCenter)
         VBox.addWidget(Title)
 
@@ -76,7 +74,6 @@ class Ui(QDialog):
         VBoxAddressesLabels.addWidget(AddressesLabel)
         VBoxAddressesLabels.addWidget(ConverterLabel)
         
-        wallet = window.wallet
         self.AddressLine=QLineEdit()
         self.AddressLine.setReadOnly(True)
         self.FindAddresses()
@@ -114,7 +111,7 @@ class Ui(QDialog):
         
         VBoxConfig=QVBoxLayout()
         self.Pattern=QLineEdit('00000')
-        self.Pattern.setMaxLength(32);
+        self.Pattern.setMaxLength(32);  #With 8B nonce, unlikely to get more than 16.
         self.Pattern.setPlaceholderText(_('Enter desired starting pattern for TXID here. Blank is OK.'))
         VBoxConfig.addWidget(self.Pattern)
         
@@ -161,7 +158,7 @@ class Ui(QDialog):
         Password=None
         for InputN in range(len(TX.inputs())):   # Sign all VanityTXID inputs, whenever possible.
             Input=TX.inputs()[InputN]
-            if Input['signatures']!=[None]: continue
+            if Input['signatures']!=[None]: continue    #Already signed.
             Address=Input['address']
             try:    #Does input in either address form belong to wallet labels?
                 try:    Index=AllLabels.index(Address.to_cashaddr())
@@ -179,28 +176,32 @@ class Ui(QDialog):
             while PrivKey is None:  #Need loop to get the right password.
                 if wallet.has_password() and Password is None:
                     Password=window.password_dialog()
-                    if Password is None: return #User doesn't want to provide password.
+                    if Password is None: return #User cancelled.
                 try: PrivKey=bitcoin.deserialize_privkey(wallet.export_private_key(qAddress,Password))[1]
                 except: Password=None   #Bad Password.
             if wallet.is_schnorr_enabled(): Sig=electroncash.schnorr.sign(PrivKey,bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
             else: Sig=TX._ecdsa_sign(PrivKey,bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
-            PrivKey='0'*52  #Permanently erase memory with 52 characters.
-            del(PrivKey)
+            PrivKey='0'*52  #How to delete an immutable string?
+            del PrivKey
             
             Input['scriptSig']=bitcoin.int_to_hex(MessageSize)+Message+'00'+bitcoin.int_to_hex(len(Sig)+1)+Sig.hex()+'41'+bitcoin.int_to_hex(int(len(script)/2))+script
-            TX.inputs()[InputN]=Input
-        Password='0'*52 #Permanently erase memory.
-        del(Password)
+
+        while wallet.can_sign(TX):  #Also sign using standard wallet. Need loop to get the right password. There's an issue where we fail to add a Message to nothing but a simple P2PKH input.
+            TX.set_sign_schnorr(wallet.is_schnorr_enabled())
+            if wallet.has_password() and Password is None:
+                Password=window.password_dialog()
+                if Password is None: return #User cancelled.
+            try: wallet.sign_transaction(TX,Password)
+            except: Password=None    #Bad Password
+ 
+        Password='0'*52
+        del Password 
         gc.collect()    #Garbage Collector for PrivKey & Password memory allocation.
         TX=electroncash.Transaction(TX.serialize())
-        
-        for Input in TX.inputs():
-            if Input['signatures']==[None]: 
-                window.show_transaction(TX) # More sigs needed, return.
-                return     
+          
         Pattern=self.Pattern.text()
-        if len(Pattern) is 0:
-            window.show_transaction(TX)     #Empty Pattern, return
+        if len(Pattern) is 0 or not TX.is_complete():
+            window.show_transaction(TX)     #Empty Pattern or more sigs needed -> return.
             return
             
         for Input in TX.inputs():   # Determine nonce position. Finding 'ac7777' is a shortcut to a full script analysis of P2SH inputs, which just takes more code.
@@ -213,7 +214,8 @@ class Ui(QDialog):
                 Input['scriptSig']=bitcoin.int_to_hex(MessageSize)+Message+'080000000000000000'+SigScript
                 break
         TX=electroncash.Transaction(TX.serialize())
-        NoncePos=bitcoin.rev_hex(bitcoin.int_to_hex(int(TX.raw.find(SigScript)/2)-8,2))
+        try: NoncePos=bitcoin.rev_hex(bitcoin.int_to_hex(int(TX.raw.find(SigScript)/2)-8,3))    #3 Byte nonce position.
+        except: return     #User is attempting to mine txn which can't be mined.
 
         Threads=bitcoin.int_to_hex(int(self.Threads.text())-1)    #I figure ' 00' means 1 since highest index is specified to C++ binary.    
         Dir=self.plugin.parent.get_external_plugin_dir()

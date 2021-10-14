@@ -1,6 +1,6 @@
 # VanityTXID-Plugin
 
-When uninstalling v1.2.0 there's a new error which requires users to close and re-open the wallet. It's fixed in 1.2.1.
+When uninstalling v1.2.0 there's an error which requires users to close and re-open the wallet. It's fixed in 1.2.1.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 

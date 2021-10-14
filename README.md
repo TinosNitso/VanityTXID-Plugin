@@ -1,12 +1,18 @@
 # VanityTXID-Plugin
 
-When uninstalling the latest version there's a new error - I'll fix it in the next update. (To reinstall user should close and re-open the wallet.) It's because it tries to cancel the mining process when it isn't happening.
+When uninstalling v1.2.0 there's a new error which requires users to close and re-open the wallet. It's fixed in 1.2.1.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash on macOS, Linux & Windows. Written in Python, & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
-main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. The screenshot example has nonce '0400000002054ba8'. '04' corresponds to the fifth thread. v1.2.0 SHA256 Checksum: 191793929ff0604e225d23ac51a774ec49e193b71e48600ea48fbeec8dd8377d
+main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. The screenshot example has nonce '0400000002054ba8'. '04' corresponds to the fifth thread. v1.2.1 SHA256 Checksum: e330b9c6a3f178c483c5c2d97723aa3c015542cd417b030f7364255b9c08cfe7
+
+v1.2.1 notes:
+- Bug fix for disable &/or uninstall error. To uninstall v1.2.0 users need to close and then re-open the wallet.
+- Bug fix when user attempts to mine a txn which can't be mined.
+- Will now sign both P2SH & P2PKH, in any order, wherever possible. They can be combined using the watching-only wallet, along with other addresses which can't be signed for.
+- I've changed the binary to use a 3 Byte nonce position, exit() function and more constants.
 
 v1.2.0 notes:
 - Full support for macOS, version High Sierra and newer.

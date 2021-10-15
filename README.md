@@ -2,7 +2,7 @@
 
 When uninstalling v1.2.0 there's an error which requires users to close and re-open the wallet. It's fixed in 1.2.1.
 
-Unfortunately I failed to include the proper source code in the last release/s. Will fix it next time! I had a problem updating the source files.
+Unfortunately I failed to include the proper C++ code in the last release/s. Will fix it next time! I had a problem updating the src files.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 

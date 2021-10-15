@@ -1,7 +1,4 @@
 # VanityTXID-Plugin
-
-Unfortunately I failed to include the proper C++ code in the last release/s. Fixed this time. I had a problem updating the src files before.
-
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)

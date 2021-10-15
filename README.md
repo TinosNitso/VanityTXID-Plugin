@@ -13,7 +13,7 @@ main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a projec
 v1.2.1 notes:
 - Bug fix for disable &/or uninstall error. To uninstall v1.2.0 users need to close and then re-open the wallet.
 - Bug fix when user attempts to mine a txn which can't be mined.
-- Will now sign both P2SH & P2PKH, in any order, wherever possible. They can be combined using the watching-only wallet, along with other addresses which can't be signed for.
+- Will now sign both P2SH & P2PKH, in any order, wherever possible. They can be combined using the watching-only wallet, along with other inputs which are signed separately.
 - I've changed the binaries to use a 3 Byte nonce position, exit() function and more constants.
 
 v1.2.0 notes:

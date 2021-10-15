@@ -1,7 +1,5 @@
 # VanityTXID-Plugin
 
-When uninstalling v1.2.0 there's an error which requires users to close and re-open the wallet. It's fixed in 1.2.1.
-
 Unfortunately I failed to include the proper C++ code in the last release/s. Will fix it next time! I had a problem updating the src files.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
@@ -10,7 +8,11 @@ Unfortunately I failed to include the proper C++ code in the last release/s. Wil
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash on macOS, Linux & Windows. Written in Python, & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
-main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. The screenshot example had nonce '01000000003c2414', where '01' corresponds to the 2nd thread. v1.2.1 SHA256 Checksum: e330b9c6a3f178c483c5c2d97723aa3c015542cd417b030f7364255b9c08cfe7
+main.cpp & Icon.rc are compiled together using the -O3 compiler flag as a project build option. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. The screenshot for v1.2.1 involved nonce '01000000003c2414', where '01' corresponds to the 2nd thread. v1.2.1 SHA256 Checksum: e330b9c6a3f178c483c5c2d97723aa3c015542cd417b030f7364255b9c08cfe7
+
+v1.3.0 Notes:
+- Full SLP Edition support! That means VanityTXID addresses can now take SLPAddr format. We could already mint vanity token IDs by using a watching-only wallet in the SLP edition, but now the plugin works natively in the SLP Edition. I've tested both Windows & Linux, and will try to update to at least macOS Catalina tomorrow. One zip for all editions & OSs.
+- multiprocessing module wasn't required for os.cpu_count(). No change to binaries (C++).
 
 v1.2.1 notes:
 - Bug fix for disable &/or uninstall error. To uninstall v1.2.0 users need to close and then re-open the wallet.

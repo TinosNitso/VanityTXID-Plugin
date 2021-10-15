@@ -1,9 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton
-from electroncash.i18n import _
+from electroncash.i18n import _ #Language translator
 from electroncash.plugins import BasePlugin, hook
-import electroncash, subprocess, multiprocessing, threading, zipfile, shutil, os, gc
+import electroncash, subprocess, threading, zipfile, shutil, os, gc
 from electroncash import bitcoin
 
 class Plugin(BasePlugin):
@@ -27,8 +27,10 @@ class Plugin(BasePlugin):
         Zip.close()
         if 'nt' not in os.name:
             Exec=Dir+'/VanityTXID/bin/VanityTXID-Plugin'
-            if 'Darwin' in os.uname().sysname: subprocess.Popen(['chmod','755',Exec+'.app'])
-            else: subprocess.Popen(['chmod','+x',Exec])
+            if 'Darwin' in os.uname().sysname: Exec+='.app'
+            subprocess.Popen(['chmod','+x',Exec])
+            #if 'Darwin' in os.uname().sysname: subprocess.Popen(['chmod','755',Exec+'.app'])
+            #else: subprocess.Popen(['chmod','+x',Exec])
         for window in qt_gui.windows: self.load_wallet(window.wallet, window)           # These are per-wallet windows.
     @hook
     def load_wallet(self, wallet, window):
@@ -40,11 +42,11 @@ class Plugin(BasePlugin):
         self.wallet_payment_tabs[wallet_name] = tab
         self.wallet_payment_lists[wallet_name] = l
         window.tabs.addTab(tab, QIcon(self.parent.get_external_plugin_dir()+"/VanityTXID/bin/Icon.ico"), 'VanityTXID')
-        tab.update()
+        tab.update()    #I suspect this helps somehow - copied from the plugin template.
     @hook
     def close_wallet(self, wallet):
         wallet_name = wallet.basename()
-        try: self.wallet_payment_lists[wallet_name].Process.terminate()
+        try: self.wallet_payment_lists[wallet_name].Process.terminate() #Can't assume successful termination or else there's a disable bug.
         except: pass
         window = self.wallet_windows[wallet_name]
         del self.wallet_windows[wallet_name]
@@ -62,7 +64,7 @@ class Ui(QDialog):
         VBox = QVBoxLayout()
         self.setLayout(VBox)
         
-        Title=QLabel('VanityTXID v1.2.1');
+        Title=QLabel('VanityTXID v1.3.0');
         Title.setAlignment(Qt.AlignCenter)
         VBox.addWidget(Title)
 
@@ -120,7 +122,7 @@ class Ui(QDialog):
         self.Message.setPlaceholderText(_('Enter hex message, to appear first in all the created sigscripts. Blank is OK. e.g. convert text->hex and enter hex here.'))
         VBoxConfig.addWidget(self.Message)
         
-        self.Threads=QLineEdit(_(str(multiprocessing.cpu_count())))
+        self.Threads=QLineEdit((str(os.cpu_count())))
         self.Threads.setMaxLength(3);
         self.Threads.setPlaceholderText(_('Enter # of threads. Default is cpu_count. Integer between 1 & 256.'))
         VBoxConfig.addWidget(self.Threads)
@@ -160,9 +162,11 @@ class Ui(QDialog):
             Input=TX.inputs()[InputN]
             if Input['signatures']!=[None]: continue    #Already signed.
             Address=Input['address']
-            try:    #Does input in either address form belong to wallet labels?
-                try:    Index=AllLabels.index(Address.to_cashaddr())
-                except: Index=AllLabels.index(Address.to_string(Address.FMT_LEGACY))
+            try:    #Does input in any address form belong to wallet labels?
+                try:
+                    try:    Index=AllLabels.index(Address.to_cashaddr())
+                    except: Index=AllLabels.index(Address.to_string(Address.FMT_LEGACY))
+                except:     Index=AllLabels.index(Address.to_slpaddr())
                 finally:
                     qAddress=Address.from_string(list(wallet.labels)[Index])
                     PubKey=wallet.get_public_key(qAddress)
@@ -222,7 +226,7 @@ class Ui(QDialog):
         Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',Threads,NoncePos,Pattern,TX.raw]
         if 'nt' in os.name:
             Command[0]+='.exe'
-            self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS)
+            self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
         else:
             if 'Darwin' in os.uname().sysname: Command[0]+='.app'
             self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
@@ -247,8 +251,7 @@ class Ui(QDialog):
                 PubKey=wallet.get_public_key(Address)   #If multisig address return nothing since that'd require "get_public_keys" (not supported)
             except: continue
             P2SHAddress=Address.from_multisig_script(bitcoin.bfh(self.scriptCode(PubKey))).to_ui_string()
-            wallet.labels[Address.to_string(Address.FMT_LEGACY)]=P2SHAddress
-        wallet.save_labels()
+            wallet.set_label(Address.to_string(Address.FMT_LEGACY),P2SHAddress)
         self.window.update_labels()
         self.FindAddresses()
     def scriptCode(self,PubKey): 
@@ -265,7 +268,7 @@ class Ui(QDialog):
                 qAddress=electroncash.address.Address.from_string(Legacy)
                 PubKey=wallet.get_public_key(qAddress)
                 pAddress=qAddress.from_multisig_script(bitcoin.bfh(self.scriptCode(PubKey)))
-                if pAddress.to_cashaddr()==label or pAddress.to_string(pAddress.FMT_LEGACY)==label:
+                if pAddress.to_cashaddr()==label or pAddress.to_string(pAddress.FMT_LEGACY)==label or pAddress.to_slpaddr()==label: #We can sign for all 3: CashAddr, Legacy & SLPAddr. The latter can throw an error which is fine.
                     self.AddressLine.insert(label+' ')  #List all P2SH addresses.
             except: continue
         

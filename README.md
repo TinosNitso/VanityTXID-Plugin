@@ -1,7 +1,7 @@
 # VanityTXID-Plugin
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
 
-I've noticed CPU lag when mining inside the SLP Edition! Python multiprocessing is unavailable, and EC reliably maxes out 1/8 CPU processors in my PC for no obvious reason.
+I've noticed CPU lag when mining inside the Windows SLP Edition! Python multiprocessing is unavailable, and EC reliably maxes out 1/8 CPU processors in my PC for no obvious reason. SLP Edition in macOS Catalina doesn't suffer from this bug.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)

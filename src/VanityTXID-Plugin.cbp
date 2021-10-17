@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="VanityTXID-Plugin" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="VanityTXID-Plugin" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="07 000030 abcde 0100000001dadf4913efdbea6d18b8c698012e60b2ca86818e39e16e84fca3cb5fdeeeffc0000000007604deadbeef0807000000006df4e44103a49b195307ea7a726467e30831ec50fd81a2f22630268337eec744f3e3bc41c6c2b72f8e0ae18e2d94147cfe442fd2574cbe35b596be9fc3b49e50c0f4f28441252103a0c88c96e7e6c44eb4670bbbd2f24376a6bd3406dfed4798149a063b9c349c15ac7777feffffff01ac0700000000000017a914f3aa0152467116c48638e01ff028256281f96989873ad40a00" />
+				<Option projectCompilerOptionsRelation="0" />
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-march=corei7-avx" />
+			<Add option="-O3" />
+			<Add option="-Wall" />
+		</Compiler>
+		<Linker>
+			<Add option="-s" />
+		</Linker>
+		<Unit filename="Icon.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="main.cpp" />
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>

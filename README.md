@@ -1,7 +1,7 @@
 # VanityTXID-Plugin
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
 
-Windows users should update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It also would have required less work from me to make the plugin SLP compatible.
+Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It also would have required less work from me to make the plugin SLP compatible.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)

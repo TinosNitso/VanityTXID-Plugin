@@ -1,4 +1,7 @@
 # VanityTXID-Plugin
+
+I just realized there's a 117 Byte size limit to the message. The Genesis message easily fits in, so I didn't realize! In the next update there'll be optional audio, and message text input, but removing the size limitation looks tricky.
+
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
 
 Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It also would have required less work from me to make the plugin SLP compatible.

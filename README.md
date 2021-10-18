@@ -1,6 +1,7 @@
 # VanityTXID-Plugin
 
-I just realized there's a 75 Byte size limit to the message (earlier I got that mixed up). The Genesis message works, so I didn't realize! In the next update there'll be optional audio, and message text input, but removing the size limitation looks tricky.
+I just realized there's a 75 Byte size limit to the message (earlier I got that mixed up). The Genesis message works, so I didn't realize! In the next update it'll be increased to at least 255B and there'll be optional audio, and message text input. Here's an example:
+https://blockchain.com/bch/tx/000009782c40fe8f926bb1db5057b4ad40bf7fbf8cf23508b62bf928686f26d0
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
 

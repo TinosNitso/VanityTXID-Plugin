@@ -1,19 +1,26 @@
 # VanityTXID-Plugin
 
-There's currently a 75 Byte limit to the Message. In the next update it'll be 512B. The plugin will also have optional notification, and message text input. Here's an example:
-https://blockchain.com/bch/tx/00000073d648302417ad306912c4a43ea1aa91907921d13d95844f58637329c0
-
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
 
 Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It also would have required less work from me to make the plugin SLP compatible.
 
-The screenshot for v1.3.0 involved nonce '0400000000b3479b', where '04' corresponds to the 5th thread. v1.3.0 SHA256 Checksum: 19428b63d42b1fe33e89af5f678dad88360c017331fe6ff5bea8cb1f96bdb49c
+The screenshot for v1.3.0 involved nonce '0400000000b3479b', where '04' corresponds to the 5th thread. v1.3.1 SHA256 Checksum: 54aececd03fc9ee202267e4a0f2bb355429c688f3f8dccc4b7c4b2222c8a7ec7
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)
+
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash on macOS, Linux & Windows. Written in Python, & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
 
 main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7-avx with the gcc compiler (before I only used -O3 -s). The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
+
+v1.3.1 Notes:
+- Max message size now 512 Bytes instead of 75B. e.g. https://blockchain.com/bch/tx/00000073d648302417ad306912c4a43ea1aa91907921d13d95844f58637329c0
+- Optional Notifications. User can change their mind after mining begins.
+- Optional TTS on every OS! I've set it to pronounce the pattern + 4 extra digits. Linux requires eSpeak or else there's no voice (sudo apt install espeak). eSpeak comes with Ubuntu. In the future I might add a speed setting, and conceivably l33t (pronounce 0 as O etc). 
+- Message input in either hex or text. Works as a hex converter!
+- If updating users need to close & re-open EC before the plugin initializes. There's some weird reinstallation bug.
+- Removed/improved IsHex() method.
+- Bold heading, altered placeholder text.
 
 v1.3.0 Notes:
 - Full SLP Edition support! That means VanityTXID addresses can now take SLPAddr format. We could already mint vanity token IDs by using a watching-only wallet in the SLP edition, but now the plugin works natively in the SLP Edition. I've tested both Windows & Linux, and will try to update to at least macOS Catalina tomorrow. One zip for all editions & OSs.

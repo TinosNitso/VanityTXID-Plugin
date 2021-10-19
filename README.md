@@ -1,10 +1,12 @@
 # VanityTXID-Plugin
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.0.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.1.png)
 
-Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It also would have required less work from me to make the plugin SLP compatible.
+Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It's also easier to code for.
 
-The screenshot for v1.3.0 involved nonce '0400000000b3479b', where '04' corresponds to the 5th thread. v1.3.1 SHA256 Checksum: 54aececd03fc9ee202267e4a0f2bb355429c688f3f8dccc4b7c4b2222c8a7ec7
+The screenshot for v1.3.1 involved nonce '0300000001258380', where '03' corresponds to the 4th thread. It took 4 minutes, and it's the first time I've ever created a child NFT, so I don't keep adding more tokens to the network.
+
+v1.3.1 SHA256 Checksum: 54aececd03fc9ee202267e4a0f2bb355429c688f3f8dccc4b7c4b2222c8a7ec7
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)

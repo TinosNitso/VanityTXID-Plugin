@@ -1,7 +1,5 @@
 # VanityTXID-Plugin
 
-Message size of exactly 78 bytes currently won't work (opcode logic bug), anything else will. There'll be a simple fix in the next update.
-
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.1.png)
 
 Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It's also easier to code for.

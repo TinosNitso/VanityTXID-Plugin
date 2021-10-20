@@ -4,7 +4,7 @@
 
 Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It's also easier to code for.
 
-The screenshot for v1.3.1 involved nonce '0300000001258380', where '03' corresponds to the 4th thread. It took 4 minutes, and it's the first time I've ever created a child NFT, so I don't keep adding more tokens to the network. I accidentally applied the sigscript message twice. If users want two inputs but only one message, the trick is to sign with a blank message first, and then copy that back in for mining + adding message (only applies to exactly one input). I suspect assembly code may be four times faster. 4 minutes to reach that exact nonce gives a hash rate of ~0.64 MH/s, for a 637 Byte txn. My CPU is i7 2600. I've read estimates ranging from 5 to 24 MH/s for an 80B block header, depending perhaps on quality of code.
+The screenshot for v1.3.1 involved nonce '0300000001258380', where '03' corresponds to the 4th thread. It took 4 minutes, and it's the first time I've ever created a child NFT, so I don't keep adding more tokens to the network. I accidentally applied the sigscript message twice. If users want two inputs but only one message, the trick is to sign with a blank message first, and then copy that back in for mining + adding message (only applies to exactly one input). I suspect assembly code may be four times faster. 4 minutes to reach that exact nonce gives a hash rate of ~0.64 MH/s, for a 637 Byte txn. My CPU is i7 2600. I've read estimates ranging from 5 to 24 MH/s for an 80B block header, depending.
 
 v1.3.1 SHA256 Checksum: 54aececd03fc9ee202267e4a0f2bb355429c688f3f8dccc4b7c4b2222c8a7ec7
 

@@ -1,30 +1,35 @@
 # VanityTXID-Plugin
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.1.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.2.png)
 
-Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster. It's also easier to code for.
+Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster.
 
-The screenshot for v1.3.1 involved nonce '0300000001258380', where '03' corresponds to the 4th thread. It took 4 minutes, and it's the first time I've ever created a child NFT, so I don't keep adding more tokens to the network. I accidentally applied the sigscript message twice. If users want two inputs but only one message, the trick is to sign with a blank message first, and then copy that back in for mining + adding message (only applies to exactly one input). I suspect assembly code may be four times faster. 4 minutes to reach that exact nonce gives a hash rate of ~0.64 MH/s, for a 637 Byte txn. My CPU is i7 2600. I've read estimates ranging from 5 to 24 MH/s for an 80B block header, depending.
+The screenshot for v1.3.2 involved nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header.
 
-v1.3.1 SHA256 Checksum: 54aececd03fc9ee202267e4a0f2bb355429c688f3f8dccc4b7c4b2222c8a7ec7
+v1.3.2 SHA256 Checksum: 8472560065d06c0159cf3c602426073e4817586431bfa7a7652036c2bc9252e4
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)
 
-Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash on macOS, Linux & Windows. Written in Python, & C++ for the miner. To install the latest version you can just download "VanityTXID-Plugin.zip" above. Using this plugin you can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in under 30secs): www.simpleledger.info/token/0000000f1393392b8de2cbf05e7a0ebc3d4630395e49a7c3f09174e46ce09da7
+Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 
-A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the smart contract can be improved. A 0-conf message can be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
+A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the smart contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
 
-main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7-avx with the gcc compiler (before I only used -O3 -s). The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
+main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
 
-v1.3.1 has a bug when the message is exactly 78 Bytes, and is already in the first input. Next version will fix it. I've also noticed hitting the Esc key kills the plugin, until it's restarted.
+v1.3.2 notes:
+- Approximate hash rate in MH/s. It assumes all threads are equal, the nonce doesn't make it to the 8th byte, & it's not reliable if there are too many threads. 1.4 MH/s is a good rate for me, for 197B.
+- 1337 option for TTS.
+- Bugfix: Message size exactly 78 bytes now always works.
+- .activateWindow may help if someone's watching a video. Fixes an issue where Windows mshta steals focus for the javascript TTS. It involves a 60ms lag, to recapture focus.
+- Slightly improved placeholder text.
+- To update, users should close & re-open their wallet, due to some reinstallation bug.
 
 v1.3.1 Notes:
 - Max message size now 512 Bytes instead of 75B. e.g. https://blockchain.com/bch/tx/00000073d648302417ad306912c4a43ea1aa91907921d13d95844f58637329c0
 - Optional Notifications. User can change their mind after mining begins.
 - Optional TTS on every OS! I've set it to pronounce the pattern + 4 extra digits. Linux requires eSpeak or else there's no voice (sudo apt install espeak). eSpeak comes with Ubuntu. In the future I might add a speed setting, and conceivably l33t (pronounce 0 as O etc). 
 - Message input in either hex or text. Works as a hex converter! It even works with Chinese.
-- If updating users need to close & re-open EC before the plugin initializes. There's some weird reinstallation bug.
 - Removed/improved IsHex() method.
 - Bold heading, altered placeholder text.
 

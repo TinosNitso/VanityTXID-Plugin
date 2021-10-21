@@ -2,16 +2,16 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.2.png)
 
-Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It has a bug-fix which makes VanityTXID work faster.
+Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It seems to have a bug-fix which makes VanityTXID work faster. I've checked the MH/s and the newer one is more consistent.
 
 The screenshot for v1.3.2 involved nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header.
-
-v1.3.2 SHA256 Checksum: 8472560065d06c0159cf3c602426073e4817586431bfa7a7652036c2bc9252e4
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
+
+v1.3.2 SHA256 Checksum: 8472560065d06c0159cf3c602426073e4817586431bfa7a7652036c2bc9252e4
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the smart contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
 

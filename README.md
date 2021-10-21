@@ -17,13 +17,13 @@ A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment
 
 main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7-avx with the gcc compiler (before I only used -O3 -s). The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
 
-v1.3.1 has a bug when the message is exactly 78 Bytes, and is already in the first input. Next version will fix it. I've noticed hitting the Esc key kills the plugin, until it's restarted.
+v1.3.1 has a bug when the message is exactly 78 Bytes, and is already in the first input. Next version will fix it. I've also noticed hitting the Esc key kills the plugin, until it's restarted.
 
 v1.3.1 Notes:
 - Max message size now 512 Bytes instead of 75B. e.g. https://blockchain.com/bch/tx/00000073d648302417ad306912c4a43ea1aa91907921d13d95844f58637329c0
 - Optional Notifications. User can change their mind after mining begins.
 - Optional TTS on every OS! I've set it to pronounce the pattern + 4 extra digits. Linux requires eSpeak or else there's no voice (sudo apt install espeak). eSpeak comes with Ubuntu. In the future I might add a speed setting, and conceivably l33t (pronounce 0 as O etc). 
-- Message input in either hex or text. Works as a hex converter!
+- Message input in either hex or text. Works as a hex converter! It even works with Chinese.
 - If updating users need to close & re-open EC before the plugin initializes. There's some weird reinstallation bug.
 - Removed/improved IsHex() method.
 - Bold heading, altered placeholder text.

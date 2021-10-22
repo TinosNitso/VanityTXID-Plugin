@@ -17,6 +17,8 @@ A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment
 
 main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
 
+In the next update the hashrate timing will be a tiny bit better, include the 8th Nonce byte, and the formula should use (Nonce+1), not Nonce. When binaries are re-built it might be better to return only the nonce itself, instead of the whole TX. One issue with controlling TTS speed is Windows might have a different UI to posix, since they specify words-per-minute instead of -10->10. Maybe pronouncing a few more digits would be better.
+
 v1.3.2 notes:
 - Approximate hash rate in MH/s. It assumes all threads are equal, the nonce doesn't make it to the 8th byte, & it's not reliable if there are too many threads. 1.4 MH/s is a good rate for me, for 197B.
 - 1337 option for TTS.

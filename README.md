@@ -2,9 +2,9 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.2.png)
 
-Windows users can update their SLP Edition to the pre-release 3.6.7-dev6. It seems to have a bug-fix which makes VanityTXID work faster. I've checked the MH/s and the newer one is more consistent.
+v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header.
 
-The screenshot for v1.3.2 involved nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header.
+Windows users might prefer SLP Edition version 3.6.7-dev6, since it doesn't use up a CPU processor in the background, and has newer code.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.1.0.png)

@@ -59,13 +59,9 @@ class Ui(QDialog):
         self.window=window
         self.plugin=plugin
 
-        VBox = QVBoxLayout()
-        self.setLayout(VBox)
-        
-        Title=QLabel('VanityTXID v1.3.2')
+        Title=QLabel('VanityTXID v1.3.3')
         Title.setStyleSheet('font-weight: bold')
         Title.setAlignment(Qt.AlignCenter)
-        VBox.addWidget(Title)
 
         AddressesLabel=QLabel(_('VanityTXID Addresses: '))
         ConverterLabel=QLabel(_('Address Converter: '))
@@ -90,14 +86,12 @@ class Ui(QDialog):
         HBox=QHBoxLayout()
         HBox.addLayout(VBoxAddressesLabels)
         HBox.addLayout(VBoxAddresses)
-        VBox.addLayout(HBox)
-       
+
         self.TXBox = QPlainTextEdit()
         self.TXBox.setPlaceholderText(_("Paste raw TX hex here for inputs to be signed by this wallet wherever possible. It's TXID is then mined for the starting pattern below. Pattern & Message can be left blank, in which case the result can be mined on a separate PC. Remember to set a higher fee in the watching-only wallet preferences, like 1.2 sat/B. The fee depends on message size."))
-        VBox.addWidget(self.TXBox)
-        
+
         self.HiddenBox=QPlainTextEdit()
-        self.HiddenBox.textChanged.connect(self.ShowTX) #Hidden textbox allows C++ binary to provide final TX, before broadcast.
+        self.HiddenBox.textChanged.connect(self.ShowTX) #Hidden textbox allows primary thread to show_transaction.
 
         self.TextHex=QComboBox()
         self.TextHex.addItems([_('(text)'),_('(hex)')])
@@ -105,18 +99,14 @@ class Ui(QDialog):
         VBoxType=QVBoxLayout()
         VBoxType.addWidget(QLabel(_('(hex)')))
         VBoxType.addWidget(self.TextHex)
-        VBoxType.addWidget(QLabel(_('(dec)')))
 
         PatternLabel=QLabel(_('TXID Starting Pattern: '))
         MessageLabel=QLabel(_('Sigscript Message: '))
-        ThreadsLabel=QLabel(_('# of CPU Threads: '))
         PatternLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         MessageLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        ThreadsLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         VBoxLabels=QVBoxLayout()
         VBoxLabels.addWidget(PatternLabel)
         VBoxLabels.addWidget(MessageLabel)
-        VBoxLabels.addWidget(ThreadsLabel)
         
         VBoxConfig=QVBoxLayout()
         self.PatternLine=QLineEdit('00000')
@@ -126,13 +116,28 @@ class Ui(QDialog):
         
         self.Message=QLineEdit()
         self.Message.setPlaceholderText(_('(Optional) Enter message. It appears first in all the created sigscripts. 512 byte limit.'))
-        self.MaxMessage=512 #By trial and error 1023 didn't work, but 512 bytes did. I don't know the exact limit.
+        self.MaxMessage=512 #By trial and error 1023 didn't work, but 512 bytes did. I don't know the exact limit. Other languages like Chinese would require a lower limit than 512.
         self.Message.setMaxLength(self.MaxMessage)
         VBoxConfig.addWidget(self.Message)
         
+        HBoxConfig=QHBoxLayout()
+        HBoxConfig.addLayout(VBoxType)
+        HBoxConfig.addLayout(VBoxLabels)
+        HBoxConfig.addLayout(VBoxConfig)
+
+        self.Button = QPushButton(_('Sign and/or Mine'))
+        self.Button.clicked.connect(self.Clicked)
+
         self.ThreadsBox=QComboBox()
-        self.ThreadsBox.addItems(list(map(str,range(1,257))))
+        self.ThreadsBox.addItems(list(map(lambda N:str(N)+' Threads',range(1,257))))
         self.ThreadsBox.setCurrentIndex(os.cpu_count()-1)
+        
+        self.TTSLen=QComboBox()
+        self.TTSLen.addItems(list(map(lambda N:'Pronounce '+str(N),range(65))))
+        self.TTSLen.setCurrentIndex(16)
+        
+        self.TTSRate=QComboBox()
+        self.TTSRate.addItems(list(map(lambda N:'@Rate: '+str(N),range(1,11))))
         
         self.TTS=QCheckBox(_('TXID To Sound'))
         self.TTS.setChecked(True)
@@ -143,25 +148,24 @@ class Ui(QDialog):
         self.Notify=QCheckBox('.notify')
         self.HashRate=QLabel(_('_.__ MH/s'))
 
-        HBoxCheck=QHBoxLayout()
-        HBoxCheck.addWidget(self.ThreadsBox)
-        HBoxCheck.addWidget(self.TTS)
-        HBoxCheck.addWidget(self.l337)
-        HBoxCheck.addWidget(self.ActivateWindow)
-        HBoxCheck.addWidget(self.Notify)
-        HBoxCheck.addWidget(self.HashRate)
-        VBoxConfig.addLayout(HBoxCheck)
+        HBoxOptions=QHBoxLayout()
+        HBoxOptions.addWidget(self.TTS)
+        HBoxOptions.addWidget(self.TTSLen)
+        HBoxOptions.addWidget(self.TTSRate)
+        HBoxOptions.addWidget(self.l337)
+        HBoxOptions.addWidget(self.ActivateWindow)
+        HBoxOptions.addWidget(self.Notify)
+        HBoxOptions.addWidget(self.ThreadsBox)
+        HBoxOptions.addWidget(self.HashRate)
         
-        HBoxConfig=QHBoxLayout()
-        HBoxConfig.addLayout(VBoxType)
-        HBoxConfig.addLayout(VBoxLabels)
-        HBoxConfig.addLayout(VBoxConfig)
+        VBox = QVBoxLayout()
+        VBox.addWidget(Title)
+        VBox.addLayout(HBox)
+        VBox.addWidget(self.TXBox)
         VBox.addLayout(HBoxConfig)
-
-        self.Button = QPushButton(_('Sign and/or Mine'))
-        self.Button.clicked.connect(self.Clicked)
         VBox.addWidget(self.Button)
-
+        VBox.addLayout(HBoxOptions)
+        self.setLayout(VBox)
     def Clicked(self):
         if self.TextHex.currentText()==_('(text)'): Message=binascii.hexlify(self.Message.text().encode()).decode()
         else:
@@ -196,27 +200,28 @@ class Ui(QDialog):
             Input['scriptCode']=script
             
             PrivKey=None
+            if not wallet.has_password(): PrivKey=bytearray(bitcoin.deserialize_privkey(wallet.export_private_key(qAddress,None))[1])
             while PrivKey is None:  #Need loop to get the right password.
-                if wallet.has_password() and Password is None:
-                    Password=window.password_dialog()
-                    if Password is None: return #User cancelled.
-                try: PrivKey=bitcoin.deserialize_privkey(wallet.export_private_key(qAddress,Password))[1]
+                if not Password:
+                    try: Password=bytearray(window.password_dialog().encode())    #A bytearray is mutable, and may be easier to erase.
+                    except: return #User cancelled, since None can't be encoded.
+                try: PrivKey=bytearray(bitcoin.deserialize_privkey(wallet.export_private_key(qAddress,Password.decode()))[1])
                 except: Password=None   #Bad Password.
-            if wallet.is_schnorr_enabled(): Sig=electroncash.schnorr.sign(PrivKey,bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
-            else: Sig=TX._ecdsa_sign(PrivKey,bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
-            PrivKey='B'*52  #How to delete an immutable string of length up to 52 long? 
+            if wallet.is_schnorr_enabled(): Sig=electroncash.schnorr.sign(bytes(PrivKey),bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
+            else: Sig=TX._ecdsa_sign(bytes(PrivKey),bitcoin.Hash(bitcoin.bfh(TX.serialize_preimage(InputN))))
+            PrivKey[0:]=bytearray(len(PrivKey)) #Erase PrivKey with \x00 bytes.
             del PrivKey
-            
-            Input['scriptSig']=bitcoin.push_script(Message)+'00'+bitcoin.int_to_hex(len(Sig)+1)+Sig.hex()+'41'+bitcoin.int_to_hex(int(len(script)/2))+script
-        while wallet.can_sign(TX):  #Also sign using standard wallet. Need loop to get the right password. There's an issue where we fail to add a Message to nothing but a simple P2PKH input.
+            Input['scriptSig']=bitcoin.push_script(Message)+'00'+bitcoin.push_script(Sig.hex()+'41')+bitcoin.push_script(script)
+        while wallet.can_sign(TX):  #Also sign using standard wallet. Need a loop to get the right password. There's an issue where we fail to add a Message to nothing but a simple P2PKH input.
             TX.set_sign_schnorr(wallet.is_schnorr_enabled())
-            if wallet.has_password() and Password is None:
-                Password=window.password_dialog()
-                if Password is None: return #User cancelled.
-            try: wallet.sign_transaction(TX,Password)
-            except: Password=None    #Bad Password
-        Password='B'*52
-        del Password 
+            if not wallet.has_password(): wallet.sign_transaction(TX,None)
+            elif not Password:
+                try: Password=bytearray(window.password_dialog().encode())
+                except: return #User cancelled.
+            try: wallet.sign_transaction(TX,Password.decode())
+            except: Password=None    #Bad Password.
+        if Password: Password[0:]=bytearray(len(Password))   #Erase Password when correct.
+        del Password
         gc.collect()    #Garbage Collector for PrivKey & Password memory allocation.
         TX=electroncash.Transaction(TX.serialize())
           
@@ -240,67 +245,74 @@ class Ui(QDialog):
                 SigScript=SigScript[2*MessageSize:]
                 NonceSize=int(SigScript[0:2],16)
                 SigScript=SigScript[2+2*NonceSize:]
-                Input['scriptSig']=bitcoin.push_script(Message)+'080000000000000000'+SigScript
+                Input['scriptSig']=bitcoin.push_script(Message)+'08'+'0'*16+SigScript
                 break
         TX=electroncash.Transaction(TX.serialize())
-        try: self.NoncePos=int(TX.raw.find(SigScript)/2)-8
+        try: NoncePos=int(TX.raw.find(SigScript)/2)-8
         except: return     #User is attempting to mine txn which can't be mined.
         
-        self.ThreadsN=int(self.ThreadsBox.currentText())
+        self.ThreadsN=int(self.ThreadsBox.currentIndex())+1
         Threads=bitcoin.int_to_hex(self.ThreadsN-1)    #I figure ' 00' means 1 since highest index is specified to C++ binary.    
         Dir=self.plugin.parent.get_external_plugin_dir()
-        Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',Threads,bitcoin.rev_hex(bitcoin.int_to_hex(self.NoncePos,3)),self.Pattern,TX.raw] #3 Byte nonce position.
+        Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',Threads,bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,3)),self.Pattern,TX.raw] #3 Byte nonce position.
         if 'nt' in os.name:
             Command[0]+='.exe'
             self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
         else:
             if 'Darwin' in os.uname().sysname: Command[0]+='.app'
             self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-        self.Time=time.time()
-        threading.Thread(target=self.Bin,args=[len(TX.raw)]).start()
-        
-        self.Button.setText('.terminate')
+        threading.Thread(target=self.Bin,args=[len(TX.raw),NoncePos*2]).start()
+
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Process.terminate)
-    def Bin(self,lenTX): self.HiddenBox.setPlainText(str(self.Process.communicate()[0])[2:2+lenTX])
-    def ShowTX(self):
-        TX=electroncash.Transaction(self.HiddenBox.toPlainText())
-        try:
-            HexPos=self.NoncePos*2+2    #Assume only 7/8 nonce bytes are being used by each thread.
-            Nonce=int(TX.raw[HexPos:HexPos+14],16)
-            self.HashRate.setText(_(str(round(Nonce/(time.time()-self.Time)/1e6*self.ThreadsN,2))+' MH/s')) #Calculate hashrate before notification.
-            
-            TXID=TX.txid_fast()
-            if self.TTS.isChecked():    #TTS first due to bug where mshta captures focus within 60ms.
-                Text=TXID[:len(self.Pattern)+4] #I like to hear a few digits after the pattern.
-                if self.l337.isChecked(): Text=Text.translate({ord('0'):'O',ord('1'):'L',ord('3'):'E',ord('4'):'A',ord('5'):'S',ord('6'):'G',ord('7'):'T'})
-                if 'nt' in os.name:
-                    subprocess.Popen(["mshta","javascript:code(close((v=new ActiveXObject('SAPI.SpVoice'))&&(v.Voice=v.GetVoices().Item("+str(random.getrandbits(1))+"))&&v.Speak('"+Text+"')))"])
-                    if self.ActivateWindow.isChecked(): time.sleep(0.06)    #Only delay for focus.
-                elif 'Darwin' in os.uname().sysname : subprocess.Popen(['say',Text])
-                else                                : subprocess.Popen(['espeak',Text]) # eSpeak required on Linux to hear TTS.
-            window=self.window
-            if self.ActivateWindow.isChecked(): window.activateWindow()
-            window.show_transaction(TX)
-            if self.Notify.isChecked(): window.notify(TXID)
-        except: pass
-        self.Button.setText('Sign and/or Mine')
+        self.Button.setText('.terminate')
+    def Bin(self,LenTX,HexPos):
+        Time=time.time()
+        TX=str(self.Process.communicate()[0])[2:2+LenTX]
+        Time2=time.time()
+
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Clicked)
+        self.Button.setText('Sign and/or Mine')
+
+        try: TXID=electroncash.Transaction(TX).txid_fast()
+        except: return  #.terminate occurred.
+        
+        window=self.window
+        if self.Notify.isChecked(): window.notify(TXID)
+        if self.TTS.isChecked():    #TTS first due to issue where mshta captures focus within 60ms.
+            Text=TXID[:self.TTSLen.currentIndex()]
+            if self.l337.isChecked(): Text=Text.translate({ord('0'):'O',ord('1'):'l',ord('3'):'E',ord('4'):'A',ord('5'):'S',ord('6'):'g',ord('7'):'T'})
+            if 'nt' in os.name:
+                subprocess.Popen(["mshta","javascript:code(close((v=new ActiveXObject('SAPI.SpVoice'))&&(v.Rate="+str(self.TTSRate.currentIndex()+1)+")&&(v.Voice=v.GetVoices().Item("+str(random.getrandbits(1))+"))&&v.Speak('"+Text+"')))"])
+                if self.ActivateWindow.isChecked(): time.sleep(0.06)    #Only delay for focus.
+            else:
+                WPM=str(175+round((720-175)*self.TTSRate.currentIndex()/9))   #Compute Words-Per-Minute on posix. 175->720 WPM is what I've tested. 175 WPM seems a bit fast for 1337.
+                if 'Darwin' in os.uname().sysname:
+                    Voices='Rishi Veena Moira Fiona Tessa Daniel Samantha Victoria Alex Fred'
+                    #Voices='Daniel Alex Fred Samantha Victoria Tessa Fiona Karen Maged Ting-Ting Sin-Ji Mei-Jia Zuzana Sara Ellen Xander Rishi Veena Moira Satu Amelie Thomas Anna Melina Mariska Damayanti Alice Luca Kyoko Yuna Nora Zosia Luciana Joana Ioana Milena Yuri Laura Diego Paulina Juan Jorge Monica Alva Kanya Yelda'    #Uncomment this line to hear any language/accent.
+                    subprocess.Popen(['say','-v',random.choice(Voices.split()),'-r',WPM,Text])
+                else: subprocess.Popen(['espeak','-s',WPM,Text]) # eSpeak required on Linux to hear TTS.
+        if self.ActivateWindow.isChecked(): window.activateWindow()
+        self.HiddenBox.setPlainText(TX)
+        
+        Nonces=int(int(TX[HexPos:HexPos+2],16)/self.ThreadsN)*256**7+int(TX[HexPos+2:HexPos+16],16)+1  #The number of nonces the winning thread got through. First byte increases by ThreadsN whenever it has to.
+        self.HashRate.setText(_(str(round(Nonces/1e6/(Time2-Time)*self.ThreadsN,2))+' MH/s'))
+    def ShowTX(self): self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))
     def AddressGen(self):
         wallet=self.window.wallet
         for Word in self.Converter.text().split():   #Generate many addresses simultaneously.
             try:
-                Address =electroncash.address.Address.from_string(Word)
-                PubKey=wallet.get_public_key(Address)   #If multisig address return nothing since that'd require "get_public_keys" (not supported)
+                Address=electroncash.address.Address.from_string(Word)
+                PubKey=wallet.get_public_key(Address)   #If multisig address, return nothing since that'd require "get_public_keys" (not supported)
             except: continue
             P2SHAddress=Address.from_multisig_script(bitcoin.bfh(self.scriptCode(PubKey))).to_ui_string()
             wallet.set_label(Address.to_string(Address.FMT_LEGACY),P2SHAddress)
         self.window.update_labels()
         self.FindAddresses()
     def scriptCode(self,PubKey):
-        if len(PubKey)>1:   return bitcoin.push_script(PubKey)+'ac7777'    #'77'=OP_NIP
-        else:               return        PubKey.to_script_hex()+'7777'    #Uncompressed PubKey is an object of length 1, whose script already has 'ac'=OP_CHECKSIG at the end.
+        try:    return bitcoin.push_script(PubKey)+'ac7777'    #'77'=OP_NIP This line applies to standard wallet addresses. Output begins with '21'.
+        except: return        PubKey.to_script_hex()+'7777'    #Imported addresses wallet. PubKey isn't a string, but an object of length 1, whose script already has 'ac'=OP_CHECKSIG at the end. Output begins with either 21 or 41.
     def FindAddresses(self):
         wallet=self.window.wallet
         self.AddressLine.clear()

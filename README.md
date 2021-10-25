@@ -18,7 +18,9 @@ A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment
 
 main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
 
-Linux in VirtualBox is only be half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
+Linux in VirtualBox is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
+
+Next update will increase message limit from 512B to the true limit of 520B. With 1337, '2' should probably be 'Z', but maybe '3' shouldn't be 'E', so '1ee7' instead. The TTS checkbox will grey-out the other TTS options.
 
 v1.3.3:
 - PrivKey & Password now mutable bytearrays instead of immutable strings.

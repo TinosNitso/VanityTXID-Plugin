@@ -20,7 +20,7 @@ main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The
 
 Linux in VirtualBox is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
 
-Next update will increase message limit from 512B to the true limit of 520B. With 1337, '2' should probably be 'Z', but maybe '3' shouldn't be 'E', so '1ee7' instead. The TTS checkbox will grey-out the other TTS options.
+Next update will increase message limit from 512B to the true limit of 520B. With 1337, '2' should probably be 'Z', and maybe '9' should be 'P'. The TTS checkbox will grey-out the other TTS options. Script will be slightly simpler.
 
 v1.3.3:
 - PrivKey & Password now mutable bytearrays instead of immutable strings.

@@ -1,4 +1,5 @@
-The following applies only to the sha256.cpp & sha256.h code used in compiling VanityTXID-Plugin executables.
+The following applies only to the sha256.cpp & sha256.h code used in compiling VanityTXID-Plugin
+The .dll files are copy-pasted from codeblocks-20.03 and aren't related to this.
 
 /*
  * Updated to C++, zedwood.com 2012

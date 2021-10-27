@@ -1,7 +1,6 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
-#include <unistd.h>
 #include "sha256.cpp"
 
 std::string FromHex(std::string Hex){
@@ -25,7 +24,7 @@ void Exit(std::string &String){
     char Return[2*String.length()];
     for (uint32_t i = 0; i < String.length(); i++)
         sprintf(Return+2*i, "%02x", (uint8_t) String[i]);
-    std::cout<<Return<<std::flush;  // flush is only needed when using a function to exit(0).
+    std::cout<<Return;
     exit(0);
 }
 void Hasher(int ThreadN,char **argv) {

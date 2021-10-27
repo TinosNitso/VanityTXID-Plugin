@@ -3,63 +3,75 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton, QCheckBox, QComboBox
 from electroncash.i18n import _ #Language translator
 from electroncash.plugins import BasePlugin, hook
-import electroncash, subprocess, threading, zipfile, shutil, os, gc, random, binascii, time
+import electroncash, subprocess, threading, zipfile, shutil, os, gc, random, binascii, time, platform
 from electroncash import bitcoin
 
 class Plugin(BasePlugin):
     def __init__(self, parent, config, name):
         BasePlugin.__init__(self, parent, config, name)
-        self.wallet_windows = {}
-        self.wallet_payment_tabs = {}
-        self.wallet_payment_lists = {}
+        self.windows, self.tabs, self.UIs = {}, {}, {}  #Initialize plugin wallet "dictionaries".
+        
+        Dir=self.parent.get_external_plugin_dir()+'/VanityTXID/'
+        Zip=zipfile.ZipFile(Dir[:-1]+'-Plugin.zip')
+        for Item in Zip.namelist():
+            if 'Icon.ico' in Item:
+                Zip.extract(Item,Dir)
+                self.ICO=Dir+Item
+            if 'nt' in os.name:
+                if '64' in platform.machine():
+                    if '64' in Item:
+                        Zip.extract(Item,Dir)
+                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
+                else:
+                    if '32' in Item:
+                        Zip.extract(Item,Dir)
+                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
+            else:
+                if 'Darwin' in os.uname().sysname:
+                    if 'Darwin' in Item:
+                        Zip.extract(Item,Dir)
+                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
+                else:
+                    if 'Linux' in Item:
+                        Zip.extract(Item,Dir)
+                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
+        Zip.extract('bin/LICENSE.txt',Dir)
+        Zip.close()
+        if 'posix' in os.name: subprocess.Popen(['chmod','+x',self.EXE])
     def on_close(self):
         """BasePlugin callback called when the wallet is disabled among other things."""
-        for window in list(self.wallet_windows.values()): self.close_wallet(window.wallet)
+        for window in self.windows.values(): self.close_wallet(window.wallet)
         shutil.rmtree(self.parent.get_external_plugin_dir()+'/VanityTXID')
     @hook
     def init_qt(self, qt_gui):
         """Hook called when a plugin is loaded (or enabled)."""
-        if len(self.wallet_windows): return # We get this multiple times.  Only handle it once, if unhandled.
-        Dir=self.parent.get_external_plugin_dir()
-        Zip=zipfile.ZipFile(Dir+'/VanityTXID-Plugin.zip')
-        for Item in Zip.namelist(): 
-            if 'bin' in Item: Zip.extract(Item,Dir+'/VanityTXID')
-        Zip.close()
-        if 'posix' in os.name:  #set executables executable for posix.
-            Exec=Dir+'/VanityTXID/bin/VanityTXID-Plugin'
-            if 'Darwin' in os.uname().sysname: Exec+='.app' #macOS seems to require we be specific.
-            subprocess.Popen(['chmod','+x',Exec])
+        if self.UIs: return # We get this multiple times.  Only handle it once, if unhandled.
         for window in qt_gui.windows: self.load_wallet(window.wallet, window)           # These are per-wallet windows.
     @hook
     def load_wallet(self, wallet, window):
         """Hook called when a wallet is loaded and a window opened for it."""
         wallet_name = wallet.basename()
-        self.wallet_windows[wallet_name] = window
-        l = Ui(window, self)
+        self.windows[wallet_name] = window
+        l = UI(window, self)
         tab = window.create_list_tab(l)
-        self.wallet_payment_tabs[wallet_name] = tab
-        self.wallet_payment_lists[wallet_name] = l
-        window.tabs.addTab(tab, QIcon(self.parent.get_external_plugin_dir()+"/VanityTXID/bin/Icon.ico"), 'VanityTXID')
-        tab.update()    #I suspect this helps somehow - copied from the plugin template.
+        self.tabs[wallet_name] = tab
+        self.UIs[wallet_name] = l
+        window.tabs.addTab(tab, QIcon(self.ICO), 'VanityTXID')
     @hook
     def close_wallet(self, wallet):
         wallet_name = wallet.basename()
-        try: self.wallet_payment_lists[wallet_name].Process.terminate() #Can't assume successful termination or else there's a disable bug.
+        try: self.UIs[wallet_name].Process.terminate() #Can't assume successful .terminate or else there's a disable bug.
         except: pass
-        window = self.wallet_windows[wallet_name]
-        del self.wallet_windows[wallet_name]
-        wallet_tab = self.wallet_payment_tabs.get(wallet_name, None)
-        if wallet_tab is not None:
-            del self.wallet_payment_lists[wallet_name]
-            del self.wallet_payment_tabs[wallet_name]
-            window.tabs.removeTab(window.tabs.indexOf(wallet_tab))
-class Ui(QDialog):
+        window = self.windows[wallet_name]
+        window.tabs.removeTab(window.tabs.indexOf(self.tabs.get(wallet_name)))
+        del self.UIs[wallet_name], self.tabs[wallet_name]
+class UI(QDialog):
     def __init__(self, window, plugin):
         QDialog.__init__(self, window)
         self.window=window
         self.plugin=plugin
 
-        Title=QLabel('VanityTXID v1.3.3')
+        Title=QLabel('VanityTXID v1.3.4')
         Title.setStyleSheet('font-weight: bold')
         Title.setAlignment(Qt.AlignCenter)
 
@@ -90,9 +102,6 @@ class Ui(QDialog):
         self.TXBox = QPlainTextEdit()
         self.TXBox.setPlaceholderText(_("Paste raw TX hex here for inputs to be signed by this wallet wherever possible. It's TXID is then mined for the starting pattern below. Pattern & Message can be left blank, in which case the result can be mined on a separate PC. Remember to set a higher fee in the watching-only wallet preferences, like 1.2 sat/B. The fee depends on message size."))
 
-        self.HiddenBox=QPlainTextEdit()
-        self.HiddenBox.textChanged.connect(self.ShowTX) #Hidden textbox allows primary thread to show_transaction.
-
         self.TextHex=QComboBox()
         self.TextHex.addItems([_('(text)'),_('(hex)')])
         self.TextHex.activated.connect(self.HexConverter)
@@ -115,8 +124,8 @@ class Ui(QDialog):
         VBoxConfig.addWidget(self.PatternLine)
         
         self.Message=QLineEdit()
-        self.Message.setPlaceholderText(_('(Optional) Enter message. It appears first in all the created sigscripts. 512 byte limit.'))
-        self.MaxMessage=512 #By trial and error 1023 didn't work, but 512 bytes did. I don't know the exact limit. Other languages like Chinese would require a lower limit than 512.
+        self.Message.setPlaceholderText(_('(Optional) Enter message. It appears first in all the created sigscripts. 520 byte limit.'))
+        self.MaxMessage=520 #Other languages like Chinese require a few bytes per character, which can cause a size error when attempting to broadcast.
         self.Message.setMaxLength(self.MaxMessage)
         VBoxConfig.addWidget(self.Message)
         
@@ -127,36 +136,29 @@ class Ui(QDialog):
 
         self.Button = QPushButton(_('Sign and/or Mine'))
         self.Button.clicked.connect(self.Clicked)
-
-        self.ThreadsBox=QComboBox()
-        self.ThreadsBox.addItems(list(map(lambda N:str(N)+' Threads',range(1,257))))
-        self.ThreadsBox.setCurrentIndex(os.cpu_count()-1)
         
         self.TTSLen=QComboBox()
-        self.TTSLen.addItems(list(map(lambda N:'Pronounce '+str(N),range(65))))
-        self.TTSLen.setCurrentIndex(16)
+        self.TTSLen.addItems('Pronounce '+str(Len) for Len in range(1,65))
+        self.TTSLen.setCurrentIndex(15)
         
         self.TTSRate=QComboBox()
-        self.TTSRate.addItems(list(map(lambda N:'@Rate: '+str(N),range(1,11))))
+        self.TTSRate.addItems('@ Rate '+str(Rate) for Rate in range(1,11))
+        
+        self.ThreadsBox=QComboBox()
+        self.ThreadsBox.addItems(str(N)+' Threads' for N in range(1,257))
+        self.ThreadsBox.setCurrentIndex(os.cpu_count()-1)
         
         self.TTS=QCheckBox(_('TXID To Sound'))
         self.TTS.setChecked(True)
+        self.TTS.toggled.connect(self.Toggled)
         self.l337=QCheckBox('1337')
-        self.l337.setChecked(True)
         self.ActivateWindow=QCheckBox('.activateWindow')
         self.ActivateWindow.setChecked(True)
         self.Notify=QCheckBox('.notify')
         self.HashRate=QLabel(_('_.__ MH/s'))
 
         HBoxOptions=QHBoxLayout()
-        HBoxOptions.addWidget(self.TTS)
-        HBoxOptions.addWidget(self.TTSLen)
-        HBoxOptions.addWidget(self.TTSRate)
-        HBoxOptions.addWidget(self.l337)
-        HBoxOptions.addWidget(self.ActivateWindow)
-        HBoxOptions.addWidget(self.Notify)
-        HBoxOptions.addWidget(self.ThreadsBox)
-        HBoxOptions.addWidget(self.HashRate)
+        {HBoxOptions.addWidget(Widget) for Widget in [self.TTS,self.TTSLen,self.TTSRate,self.l337,self.ActivateWindow,self.Notify,self.ThreadsBox,self.HashRate]}
         
         VBox = QVBoxLayout()
         VBox.addWidget(Title)
@@ -166,6 +168,9 @@ class Ui(QDialog):
         VBox.addWidget(self.Button)
         VBox.addLayout(HBoxOptions)
         self.setLayout(VBox)
+        
+        self.HiddenBox=QPlainTextEdit()
+        self.HiddenBox.textChanged.connect(self.ShowTX) #Hidden textbox allows primary Qt thread to show_transaction.
     def Clicked(self):
         if self.TextHex.currentText()==_('(text)'): Message=binascii.hexlify(self.Message.text().encode()).decode()
         else:
@@ -203,7 +208,7 @@ class Ui(QDialog):
             if not wallet.has_password(): PrivKey=bytearray(bitcoin.deserialize_privkey(wallet.export_private_key(qAddress,None))[1])
             while PrivKey is None:  #Need loop to get the right password.
                 if not Password:
-                    try: Password=bytearray(window.password_dialog().encode())    #A bytearray is mutable, and may be easier to erase.
+                    try: Password=bytearray(window.password_dialog().encode())    #A bytearray is mutable, and may be easier to erase (more secure) than an immutable str.
                     except: return #User cancelled, since None can't be encoded.
                 try: PrivKey=bytearray(bitcoin.deserialize_privkey(wallet.export_private_key(qAddress,Password.decode()))[1])
                 except: Password=None   #Bad Password.
@@ -239,34 +244,26 @@ class Ui(QDialog):
                 elif MessageSize==0x4d: #OP_PUSHDATA2
                     MessageSize=int(bitcoin.rev_hex(SigScript[0:4]),16)
                     SigScript=SigScript[4:]
-                elif MessageSize==0x4e: #OP_PUSHDATA4   It's impossible to reach this size.
-                    MessageSize=int(bitcoin.rev_hex(SigScript[0:8]),16)
-                    SigScript=SigScript[8:]
                 SigScript=SigScript[2*MessageSize:]
                 NonceSize=int(SigScript[0:2],16)
                 SigScript=SigScript[2+2*NonceSize:]
-                Input['scriptSig']=bitcoin.push_script(Message)+'08'+'0'*16+SigScript
+                Input['scriptSig']=bitcoin.push_script(Message)+'08'+'00'*8+SigScript
                 break
         TX=electroncash.Transaction(TX.serialize())
         try: NoncePos=int(TX.raw.find(SigScript)/2)-8
         except: return     #User is attempting to mine txn which can't be mined.
         
-        self.ThreadsN=int(self.ThreadsBox.currentIndex())+1
-        Threads=bitcoin.int_to_hex(self.ThreadsN-1)    #I figure ' 00' means 1 since highest index is specified to C++ binary.    
-        Dir=self.plugin.parent.get_external_plugin_dir()
-        Command=[Dir+'/VanityTXID/bin/VanityTXID-Plugin',Threads,bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,3)),self.Pattern,TX.raw] #3 Byte nonce position.
-        if 'nt' in os.name:
-            Command[0]+='.exe'
-            self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
-        else:
-            if 'Darwin' in os.uname().sysname: Command[0]+='.app'
-            self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-        threading.Thread(target=self.Bin,args=[len(TX.raw),NoncePos*2]).start()
+        ThreadsN=self.ThreadsBox.currentIndex()+1
+        Threads=bitcoin.int_to_hex(ThreadsN-1)    #I figure '00' means 1 since highest thread index is specified to C++ binary.
+        Command=[self.plugin.EXE,Threads,bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,3)),self.Pattern,TX.raw] #3 Byte nonce position.
+        if 'nt' in os.name: self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
+        else: self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
+        threading.Thread(target=self.Bin,args=[len(TX.raw),NoncePos*2,ThreadsN]).start()
 
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Process.terminate)
         self.Button.setText('.terminate')
-    def Bin(self,LenTX,HexPos):
+    def Bin(self,LenTX,HexPos,ThreadsN):
         Time=time.time()
         TX=str(self.Process.communicate()[0])[2:2+LenTX]
         Time2=time.time()
@@ -281,23 +278,24 @@ class Ui(QDialog):
         window=self.window
         if self.Notify.isChecked(): window.notify(TXID)
         if self.TTS.isChecked():    #TTS first due to issue where mshta captures focus within 60ms.
-            Text=TXID[:self.TTSLen.currentIndex()]
-            if self.l337.isChecked(): Text=Text.translate({ord('0'):'O',ord('1'):'l',ord('3'):'E',ord('4'):'A',ord('5'):'S',ord('6'):'g',ord('7'):'T'})
+            Text=TXID[:self.TTSLen.currentIndex()+1]
+            if self.l337.isChecked(): Text=Text.translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))
             if 'nt' in os.name:
                 subprocess.Popen(["mshta","javascript:code(close((v=new ActiveXObject('SAPI.SpVoice'))&&(v.Rate="+str(self.TTSRate.currentIndex()+1)+")&&(v.Voice=v.GetVoices().Item("+str(random.getrandbits(1))+"))&&v.Speak('"+Text+"')))"])
-                if self.ActivateWindow.isChecked(): time.sleep(0.06)    #Only delay for focus.
+                if self.ActivateWindow.isChecked(): time.sleep(0.06)    #Only delay for focus. PowerShell -C can create SAPI.SpVoice directly, but it's slower than a 60ms delay following mshta.
             else:
                 WPM=str(175+round((720-175)*self.TTSRate.currentIndex()/9))   #Compute Words-Per-Minute on posix. 175->720 WPM is what I've tested. 175 WPM seems a bit fast for 1337.
                 if 'Darwin' in os.uname().sysname:
-                    Voices='Rishi Veena Moira Fiona Tessa Daniel Samantha Victoria Alex Fred'
+                    Voices='Rishi Veena Moira Fiona Tessa Daniel Samantha Victoria Alex Fred'   #English only.
+                    #Voices='Ting-Ting Sin-Ji'  macOS users can pick a specific language here, e.g. Chinese.
                     #Voices='Daniel Alex Fred Samantha Victoria Tessa Fiona Karen Maged Ting-Ting Sin-Ji Mei-Jia Zuzana Sara Ellen Xander Rishi Veena Moira Satu Amelie Thomas Anna Melina Mariska Damayanti Alice Luca Kyoko Yuna Nora Zosia Luciana Joana Ioana Milena Yuri Laura Diego Paulina Juan Jorge Monica Alva Kanya Yelda'    #Uncomment this line to hear any language/accent.
                     subprocess.Popen(['say','-v',random.choice(Voices.split()),'-r',WPM,Text])
                 else: subprocess.Popen(['espeak','-s',WPM,Text]) # eSpeak required on Linux to hear TTS.
         if self.ActivateWindow.isChecked(): window.activateWindow()
         self.HiddenBox.setPlainText(TX)
         
-        Nonces=int(int(TX[HexPos:HexPos+2],16)/self.ThreadsN)*256**7+int(TX[HexPos+2:HexPos+16],16)+1  #The number of nonces the winning thread got through. First byte increases by ThreadsN whenever it has to.
-        self.HashRate.setText(_(str(round(Nonces/1e6/(Time2-Time)*self.ThreadsN,2))+' MH/s'))
+        Nonces=1+int(TX[HexPos+2:HexPos+16],16)+int(int(TX[HexPos:HexPos+2],16)/ThreadsN)*256**7  #The number of nonces the winning thread got through. First byte increases by ThreadsN whenever it has to.
+        self.HashRate.setText(_(str(round(Nonces/1e6/(Time2-Time)*ThreadsN,2))+' MH/s'))
     def ShowTX(self): self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))
     def AddressGen(self):
         wallet=self.window.wallet
@@ -312,7 +310,7 @@ class Ui(QDialog):
         self.FindAddresses()
     def scriptCode(self,PubKey):
         try:    return bitcoin.push_script(PubKey)+'ac7777'    #'77'=OP_NIP This line applies to standard wallet addresses. Output begins with '21'.
-        except: return        PubKey.to_script_hex()+'7777'    #Imported addresses wallet. PubKey isn't a string, but an object of length 1, whose script already has 'ac'=OP_CHECKSIG at the end. Output begins with either 21 or 41.
+        except: return        PubKey.to_script_hex()+'7777'    #Imported private key/s wallet. PubKey isn't a string, but an object of length 1, whose script already has 'ac'=OP_CHECKSIG at the end. Output begins with either 21 or 41.
     def FindAddresses(self):
         wallet=self.window.wallet
         self.AddressLine.clear()
@@ -334,4 +332,5 @@ class Ui(QDialog):
             try: self.Message.setText(bitcoin.bfh(self.Message.text()).decode())
             except: pass
             self.Message.setMaxLength(self.MaxMessage)
-        
+    def Toggled(self): {Box.setEnabled(self.TTS.isChecked()) for Box in [self.TTSLen,self.TTSRate,self.l337]}
+    

@@ -20,7 +20,7 @@ main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The
 
 Linux in VirtualBox is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
 
-Next update will increase message limit from 512B to the true limit of 520B. 1337 will be unchecked by default, but use dict 'OlZEASGTBP'. The TTS checkbox will grey-out the other TTS options. Qt script will be simpler.
+Next update will increase message limit from 512B to the true limit of 520B. 1337 will be unchecked by default, but use dict 'OlZEASGTBP'. The TTS checkbox will grey-out the other TTS options. Qt script will be simpler, and I've solved the update-crash bug (no need to restart wallet when updating the plugin).
 
 v1.3.3:
 - PrivKey & Password now mutable bytearrays instead of immutable strings.

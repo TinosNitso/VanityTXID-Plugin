@@ -12,7 +12,7 @@ Windows users might prefer SLP Edition version 3.6.7-dev6, since it doesn't use 
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 
-v1.3.3 SHA256 Checksum: 8ad371bfbc7d0911950405c5f3b076811dc3ad5af0ac6ae6f01c3447b0395bb9
+v1.3.4 SHA256 Checksum: 0c35dfc1734c78e52171a8c6d8c9156fa9829c55bd48aaa87e60e4c54fa8920f
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the smart contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
 
@@ -20,22 +20,24 @@ main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The
 
 Linux in VirtualBox is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
 
-Next update will increase message limit from 512B to the true limit of 520B. 1337 will be unchecked by default, but use dict 'OlZEASGTBP'. The TTS checkbox will grey-out the other TTS options. Qt script will be simpler, and I've solved the update-crash bug (no need to restart wallet when updating the plugin). 64-bit Windows binaries will also be included, which run like 6% faster (1.5 vs 1.4 MH/s).
+v1.3.4:
+- Windows 64 bit binary (with i7-AVX tuning) slightly faster on my CPU (1.5 MH/s instead of 1.4 MH/s). Back in v1.1.0 I downgraded to 32-bit, before I could check the MH/s. Just because EC is 32-bit, doesn't mean its plugins should always be! TBH I haven't tested a 32-bit VM yet. The plugin has now doubled in size. I haven't rebuilt the posix binaries.
+- Message size limit increaed to 520 Bytes, instead of 512B. Technically for data a better scriptcode could involve 3 OP_NIPs (777777) at the end, since it takes a few to max out the scriptsig limit (1650B). 1650B may correspond to something like a 15-of-15 multisig input, or a few OP_NIPs. 3 OP_NIPs, instead of 2, may be a bit like signing with a middle name, as well as first and last names. 77777777 may be even better (2 middle names), due to an added nonce being separate, for a vanity TXID. 520B example: https://blockchain.com/bch/tx/00000003ace42ee6d165eb3b37d27b42703cb0a56ce2990c60a84e01e78ae6d7
+- 1337 off by default, now dict uses 'OlZEASGTBP'.
+- Unchecking TTS now disables TTS controls, etc.
+- Simpler Python script will fix update bug next time around. When updating to 1.3.4 there is still a bug from the previous version which means users have to restart their wallets, but it shouldn't happen again.
 
 v1.3.3:
 - PrivKey & Password now mutable bytearrays instead of immutable strings.
 - User can now set how many TXID digits to pronounce, as well as TTS Rate. On POSIX 1->10 corresponds to 175->720 WPM. In a future version I might enable slower speeds, since that could help with 1337.
 - Random voice in macOS, chosen from 10! I tested in Catalina. To hear hex/1337 speak in any language or accent, a macOS user can uncomment the long Voices line in qt.py
 - More elegant HashRate timing, & formula which handles all 8B of nonce. More elegant script.
-- Bug: Updating requires restarting wallet.
 
 v1.3.2:
 - Approximate hash rate in MH/s. It assumes all threads are equal, the nonce doesn't make it to the 8th byte, & it's not reliable if there are too many threads. 1.4 MH/s is a good rate for me, for 197B.
 - 1337 option for TTS.
 - Bugfix: Message size exactly 78 bytes now always works.
 - .activateWindow may help if someone's watching a video. Fixes an issue where Windows mshta steals focus for the javascript TTS. It involves a 60ms lag, to recapture focus.
-- Slightly improved placeholder text.
-- To update, users should close & re-open their wallet, due to some reinstallation bug.
 
 v1.3.1:
 - Max message size now 512 Bytes instead of 75B. e.g. https://blockchain.com/bch/tx/00000073d648302417ad306912c4a43ea1aa91907921d13d95844f58637329c0

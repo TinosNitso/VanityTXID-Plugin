@@ -4,7 +4,7 @@
 
 v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header.
 
-Windows users might prefer SLP Edition version 3.6.7-dev6, since it doesn't use up a CPU processor in the background. It also has newer code.
+SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background, unlike 3.6.6. It also has newer code.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 
@@ -14,18 +14,18 @@ Generate txn IDs starting with a specific pattern, using a standard wallet + plu
 
 v1.3.4 SHA256 Checksum: 0c35dfc1734c78e52171a8c6d8c9156fa9829c55bd48aaa87e60e4c54fa8920f
 
-A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the smart contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
+A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
 
-main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The three .dll libraries are extracted directly from 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. I've now included the Windows project file with example arguments so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
+main.cpp & Icon.rc are compiled together using -O3 -s with the gcc compiler. The three .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. A Windows project file with example arguments is included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code.
 
-Linux in VirtualBox is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
+Linux in VirtualBox (screenshot) is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
 
 v1.3.4:
 - Windows 64 bit binary (with i7-AVX tuning) slightly faster on my CPU (1.5 MH/s instead of 1.4 MH/s). Back in v1.1.0 I downgraded to 32-bit, before I could check the MH/s. Just because EC is 32-bit, doesn't mean its plugins should always be! TBH I haven't tested a 32-bit VM yet. The plugin has now doubled in size. I haven't rebuilt the posix binaries.
 - Message size limit increaed to 520 Bytes, instead of 512B. Technically for data a better scriptcode could involve 3 OP_NIPs (777777) at the end, since it takes a few to max out the scriptsig limit (1650B). 1650B may correspond to something like a 15-of-15 multisig input, or a few OP_NIPs. 3 OP_NIPs, instead of 2, may be a bit like signing with a middle name, as well as first and last names. 77777777 may be even better (2 middle names), due to an added nonce being separate, for a vanity TXID. 520B example: https://blockchain.com/bch/tx/00000003ace42ee6d165eb3b37d27b42703cb0a56ce2990c60a84e01e78ae6d7
 - 1337 off by default, now dict uses 'OlZEASGTBP'.
 - Unchecking TTS now disables TTS controls, etc.
-- Simpler Python script will fix update bug next time around. When updating to 1.3.4 there is still a bug from the previous version which means users have to restart their wallets, but it shouldn't happen again.
+- Simpler Python script.
 
 v1.3.3:
 - PrivKey & Password now mutable bytearrays instead of immutable strings.

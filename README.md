@@ -20,7 +20,7 @@ main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 gcc compiler
 
 Linux requires eSpeak for TXID To Sound. Linux in VirtualBox (screenshot) is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
 
-I've discovered a bug when using 32-bit Windows 10, which doesn't allow the TXID To Sound option (unchecking that will fix the problem). Next update will fix this by calling PowerShell instead of mshta (MicroSoft HTml Application). The language translator also doesn't work, except for one word at a time.
+I've discovered a bug when using 32-bit Windows 10, which doesn't allow the TXID To Sound option (unchecking that will fix the problem). Next update will fix this by calling PowerShell instead of mshta (MicroSoft HTml Application). Another bugfix is for when Linux doesn't have espeak. Also the plugin shouldn't keep re-extracting its binaries every time we start EC. Also the WPM formula should be exponential (non-linear) in the @ Rate index. The language translator doesn't work, except for one word at a time (I'm not sure if I should bother fixing it).
 
 v1.3.4:
 - Windows 64 bit binary (with i7-AVX tuning) slightly faster on my CPU (1.5 MH/s instead of 1.4 MH/s). Back in v1.1.0 I downgraded to 32-bit, before I could check the MH/s. Just because EC is 32-bit, doesn't mean its plugins should always be! TBH I haven't tested a 32-bit VM yet. The plugin has now doubled in size. I haven't rebuilt the posix binaries.

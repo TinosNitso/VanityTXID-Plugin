@@ -20,6 +20,8 @@ main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 gcc compiler
 
 Linux requires eSpeak for TXID To Sound. Linux in VirtualBox (screenshot) is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
 
+I've discovered a bug when using 32-bit Windows 10, which doesn't allow the TXID To Sound option (unchecking that will fix the problem). Next update will fix this by calling PowerShell instead of mshta (MicroSoft HTml Application). The language translator also doesn't work, except for one word at a time.
+
 v1.3.4:
 - Windows 64 bit binary (with i7-AVX tuning) slightly faster on my CPU (1.5 MH/s instead of 1.4 MH/s). Back in v1.1.0 I downgraded to 32-bit, before I could check the MH/s. Just because EC is 32-bit, doesn't mean its plugins should always be! TBH I haven't tested a 32-bit VM yet. The plugin has now doubled in size. I haven't rebuilt the posix binaries.
 - Message size limit increaed to 520 Bytes, instead of 512B. Technically for data a better scriptcode could involve 3 OP_NIPs (777777) at the end, since it takes a few to max out the scriptsig limit (1650B). 1650B may correspond to something like a 15-of-15 multisig input, or a few OP_NIPs. 3 OP_NIPs, instead of 2, may be a bit like signing with a middle name, as well as first and last names. 77777777 may be even better (2 middle names), due to an added nonce being separate, for a vanity TXID. 520B example: https://blockchain.com/bch/tx/00000003ace42ee6d165eb3b37d27b42703cb0a56ce2990c60a84e01e78ae6d7

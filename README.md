@@ -2,7 +2,7 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.2.png)
 
-v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s.
+v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B in v1.4.0 I get just over 1.9 MH/s.
 
 SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background, unlike 3.6.6. It also has newer code. The issue arises in both Windows & Linux.
 
@@ -22,7 +22,7 @@ Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in term
 
 v1.4.0: SHA256 Checksum: cd254b21f771353738d80306f4f9648e8ef60d9e93b118b7786d20bd46c11693
 - ~31% speed increase by using Bitcoin Core's CSHA256 C++ code. Binary sizes are all much larger now. I've removed the zedwood license. In a future update I might bring it back as a UI selection, since zedwood probably wins on simplicity (imagine having to write every line yourself). Users might want to select between CryptoPP, OpenSSL, Bitcoin Core & zedwood, to check the hash rates. I've noticed results which are a bit too impressive inside Linux & macOS VMs. eg I got 1.4 MH/s using only 4 Threads in a very slow macOS Catalina VirtualBox. This should mean I get more than 1.9 MH/s natively in Windows. I'll probably try a native Linux test. It could be there's an issue with MinGW being slow (poor Windows build).
-- BugFix: Windows TTS now uses PowerShell -C instead of MSHTA (MicroSoft HTml App.) since the latter isn't allowed on 32-bit Windows 10 Home N.
+- BugFix: Windows TTS now uses PowerShell -C instead of MSHTA (MicroSoft HTml App.) since the latter isn't allowed on 32-bit WIN10 Home N.
 - Improved Python script. Only ever extract binaries from zip once, on enable (faster startup). Disabling plugin still removes all binaries.
 - BugFix: Hash rate was always over by ~1% (3*1/255) due to 'for' loops failing to catch a few used nonce bytes at #255 (or -1). I was just about to switch back from the new 'do' loops, due to them being 1% slower!
 - Random espeak pitch now in Linux, which is the synth version of random voice. BugFix: Lack of espeak no longer throws an error.

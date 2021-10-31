@@ -1,9 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton, QCheckBox, QComboBox
-from electroncash.i18n import _ #Language translator
+from electroncash.i18n import _ #Language translator doesn't work on more than one word at a time, at least not when I tested it.
 from electroncash.plugins import BasePlugin, hook
-import electroncash, subprocess, threading, zipfile, shutil, os, gc, random, binascii, time, platform
+import electroncash, subprocess, threading, zipfile, shutil, gc, random, binascii, time, platform
 from electroncash import bitcoin
 
 class Plugin(BasePlugin):
@@ -12,32 +12,26 @@ class Plugin(BasePlugin):
         self.windows, self.tabs, self.UIs = {}, {}, {}  #Initialize plugin wallet "dictionaries".
         
         Dir=self.parent.get_external_plugin_dir()+'/VanityTXID/'
-        Zip=zipfile.ZipFile(Dir[:-1]+'-Plugin.zip')
-        for Item in Zip.namelist():
-            if 'Icon.ico' in Item:
+        self.ICO=Dir+'src/Icon.ico'
+        if shutil.os.path.exists(Dir): Extract=False   #Only ever extract zip (i.e. install) once.
+        else:
+            Extract=True
+            Zip=zipfile.ZipFile(Dir[:-1]+'-Plugin.zip') #shutil._unpack_zipfile is an alternative function, but it'd extract everything.
+            Zip.extract('src/Icon.ico',Dir)
+            Zip.extract('bin/LICENSE.txt',Dir)
+        if 'Windows' in platform.system():
+            if '64' in platform.machine(): binDir='bin/Windows/'
+            else: binDir='bin/Windows-x86/'
+            self.EXE=Dir+binDir+'VanityTXID-Plugin.exe'
+            if Extract: {Zip.extract(Item,Dir) for Item in Zip.namelist() if Item.startswith(binDir)}
+        else:
+            if 'Darwin' in platform.system(): Item='bin/Darwin/VanityTXID-Plugin'
+            else: Item='bin/Linux/VanityTXID-Plugin'
+            self.EXE=Dir+Item
+            if Extract:
                 Zip.extract(Item,Dir)
-                self.ICO=Dir+Item
-            if 'nt' in os.name:
-                if '64' in platform.machine():
-                    if '64' in Item:
-                        Zip.extract(Item,Dir)
-                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
-                else:
-                    if '32' in Item:
-                        Zip.extract(Item,Dir)
-                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
-            else:
-                if 'Darwin' in os.uname().sysname:
-                    if 'Darwin' in Item:
-                        Zip.extract(Item,Dir)
-                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
-                else:
-                    if 'Linux' in Item:
-                        Zip.extract(Item,Dir)
-                        if 'bin' and 'VanityTXID' in Item: self.EXE=Dir+Item
-        Zip.extract('bin/LICENSE.txt',Dir)
-        Zip.close()
-        if 'posix' in os.name: subprocess.Popen(['chmod','+x',self.EXE])
+                subprocess.Popen(['chmod','+x',self.EXE])
+        if Extract: Zip.close()
     def on_close(self):
         """BasePlugin callback called when the wallet is disabled among other things."""
         for window in self.windows.values(): self.close_wallet(window.wallet)
@@ -71,14 +65,12 @@ class UI(QDialog):
         self.window=window
         self.plugin=plugin
 
-        Title=QLabel('VanityTXID v1.3.4')
+        Title=QLabel('VanityTXID v1.4.0')
         Title.setStyleSheet('font-weight: bold')
         Title.setAlignment(Qt.AlignCenter)
 
         AddressesLabel=QLabel(_('VanityTXID Addresses: '))
         ConverterLabel=QLabel(_('Address Converter: '))
-        AddressesLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        ConverterLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         VBoxAddressesLabels=QVBoxLayout()
         VBoxAddressesLabels.addWidget(AddressesLabel)
         VBoxAddressesLabels.addWidget(ConverterLabel)
@@ -111,12 +103,10 @@ class UI(QDialog):
 
         PatternLabel=QLabel(_('TXID Starting Pattern: '))
         MessageLabel=QLabel(_('Sigscript Message: '))
-        PatternLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        MessageLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         VBoxLabels=QVBoxLayout()
         VBoxLabels.addWidget(PatternLabel)
         VBoxLabels.addWidget(MessageLabel)
-        
+
         VBoxConfig=QVBoxLayout()
         self.PatternLine=QLineEdit('00000')
         self.PatternLine.setMaxLength(32);  #With 8 Byte nonce, unlikely to get more than 16.
@@ -142,23 +132,24 @@ class UI(QDialog):
         self.TTSLen.setCurrentIndex(15)
         
         self.TTSRate=QComboBox()
-        self.TTSRate.addItems('@ Rate '+str(Rate) for Rate in range(1,11))
+        self.TTSRate.addItems('@ Rate '+str(Rate) for Rate in range(11))
+        self.TTSRate.setCurrentIndex(5)
         
         self.ThreadsBox=QComboBox()
         self.ThreadsBox.addItems(str(N)+' Threads' for N in range(1,257))
-        self.ThreadsBox.setCurrentIndex(os.cpu_count()-1)
+        self.ThreadsBox.setCurrentIndex(shutil.os.cpu_count()-1)
         
         self.TTS=QCheckBox(_('TXID To Sound'))
         self.TTS.setChecked(True)
         self.TTS.toggled.connect(self.Toggled)
         self.l337=QCheckBox('1337')
         self.ActivateWindow=QCheckBox('.activateWindow')
-        self.ActivateWindow.setChecked(True)
         self.Notify=QCheckBox('.notify')
         self.HashRate=QLabel(_('_.__ MH/s'))
 
         HBoxOptions=QHBoxLayout()
         {HBoxOptions.addWidget(Widget) for Widget in [self.TTS,self.TTSLen,self.TTSRate,self.l337,self.ActivateWindow,self.Notify,self.ThreadsBox,self.HashRate]}
+        {Label.setAlignment(Qt.AlignRight | Qt.AlignVCenter) for Label in [AddressesLabel,ConverterLabel,PatternLabel,MessageLabel]}
         
         VBox = QVBoxLayout()
         VBox.addWidget(Title)
@@ -177,14 +168,16 @@ class UI(QDialog):
             if not all([Char in '0123456789abcdefABCDEF' for Char in self.Message.text()]): return   #Valid Message hex?
             if len(self.Message.text())%2: self.Message.insert('0') #Add 0 if someone wants an odd hex Message.
             Message=self.Message.text()
+        Message=Message[:self.MaxMessage*2]
+        
         self.Pattern=self.PatternLine.text()
         if not all([Char in '0123456789abcdefABCDEF' for Char in self.Pattern]): return   #Valid Pattern hex?
         
         TX=electroncash.Transaction(self.TXBox.toPlainText())
         try: TX.inputs()[0] and TX.outputs()    #Valid hex in text box?
         except: return
-        wallet=self.window.wallet
         window=self.window
+        wallet=window.wallet
         AllLabels=list(wallet.labels.values())
         Password=None
         for InputN in range(len(TX.inputs())):   # Sign all VanityTXID inputs, whenever possible.
@@ -225,7 +218,7 @@ class UI(QDialog):
                 except: return #User cancelled.
             try: wallet.sign_transaction(TX,Password.decode())
             except: Password=None    #Bad Password.
-        if Password: Password[0:]=bytearray(len(Password))   #Erase Password when correct.
+        if Password: Password[0:]=bytearray(len(Password))   #Erase Password, when correct.
         del Password
         gc.collect()    #Garbage Collector for PrivKey & Password memory allocation.
         TX=electroncash.Transaction(TX.serialize())
@@ -234,7 +227,7 @@ class UI(QDialog):
             window.show_transaction(TX)     #Empty Pattern or more sigs needed -> return.
             return
         for Input in TX.inputs():   # Determine nonce position. Finding 'ac7777' at the end is a shortcut to a full script analysis of P2SH inputs, which just takes more code.
-            if Input['type']=='unknown' and 'ac7777'==Input['scriptSig'][-6:]:
+            if Input['type']=='unknown' and Input['scriptSig'].endswith('ac7777'):
                 SigScript=Input['scriptSig']
                 MessageSize=int(SigScript[0:2],16)
                 SigScript=SigScript[2:]
@@ -256,7 +249,7 @@ class UI(QDialog):
         ThreadsN=self.ThreadsBox.currentIndex()+1
         Threads=bitcoin.int_to_hex(ThreadsN-1)    #I figure '00' means 1 since highest thread index is specified to C++ binary.
         Command=[self.plugin.EXE,Threads,bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,3)),self.Pattern,TX.raw] #3 Byte nonce position.
-        if 'nt' in os.name: self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
+        if 'Windows' in platform.system(): self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
         else: self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
         threading.Thread(target=self.Bin,args=[len(TX.raw),NoncePos*2,ThreadsN]).start()
 
@@ -276,26 +269,27 @@ class UI(QDialog):
         except: return  #.terminate occurred.
         
         window=self.window
-        if self.Notify.isChecked(): window.notify(TXID)
-        if self.TTS.isChecked():    #TTS first due to issue where mshta captures focus within 60ms.
-            Text=TXID[:self.TTSLen.currentIndex()+1]
-            if self.l337.isChecked(): Text=Text.translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))
-            if 'nt' in os.name:
-                subprocess.Popen(["mshta","javascript:code(close((v=new ActiveXObject('SAPI.SpVoice'))&&(v.Rate="+str(self.TTSRate.currentIndex()+1)+")&&(v.Voice=v.GetVoices().Item("+str(random.getrandbits(1))+"))&&v.Speak('"+Text+"')))"])
-                if self.ActivateWindow.isChecked(): time.sleep(0.06)    #Only delay for focus. PowerShell -C can create SAPI.SpVoice directly, but it's slower than a 60ms delay following mshta.
-            else:
-                WPM=str(175+round((720-175)*self.TTSRate.currentIndex()/9))   #Compute Words-Per-Minute on posix. 175->720 WPM is what I've tested. 175 WPM seems a bit fast for 1337.
-                if 'Darwin' in os.uname().sysname:
-                    Voices='Rishi Veena Moira Fiona Tessa Daniel Samantha Victoria Alex Fred'   #English only.
-                    #Voices='Ting-Ting Sin-Ji'  macOS users can pick a specific language here, e.g. Chinese.
-                    #Voices='Daniel Alex Fred Samantha Victoria Tessa Fiona Karen Maged Ting-Ting Sin-Ji Mei-Jia Zuzana Sara Ellen Xander Rishi Veena Moira Satu Amelie Thomas Anna Melina Mariska Damayanti Alice Luca Kyoko Yuna Nora Zosia Luciana Joana Ioana Milena Yuri Laura Diego Paulina Juan Jorge Monica Alva Kanya Yelda'    #Uncomment this line to hear any language/accent.
-                    subprocess.Popen(['say','-v',random.choice(Voices.split()),'-r',WPM,Text])
-                else: subprocess.Popen(['espeak','-s',WPM,Text]) # eSpeak required on Linux to hear TTS.
         if self.ActivateWindow.isChecked(): window.activateWindow()
         self.HiddenBox.setPlainText(TX)
         
         Nonces=1+int(TX[HexPos+2:HexPos+16],16)+int(int(TX[HexPos:HexPos+2],16)/ThreadsN)*256**7  #The number of nonces the winning thread got through. First byte increases by ThreadsN whenever it has to.
         self.HashRate.setText(_(str(round(Nonces/1e6/(Time2-Time)*ThreadsN,2))+' MH/s'))
+        
+        if self.Notify.isChecked(): window.notify(TXID)
+        if self.TTS.isChecked():
+            Text=TXID[:self.TTSLen.currentIndex()+1]
+            if self.l337.isChecked(): Text=Text.translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))
+            if 'Windows' in platform.system(): subprocess.Popen(['PowerShell','-C',"$V=New-Object -C SAPI.SPVoice;$V.Rate="+str(self.TTSRate.currentIndex())+";$V.Voice=$V.GetVoices().Item("+str(random.getrandbits(1))+");$V.Speak('"+Text+"')"],creationflags=0x8000000)  #Use slow PowerShell because MSHTA isn't allowed on 32-bit WIN10 Home N.
+            else:
+                WPM=str(round(175*(450/175)**(self.TTSRate.currentIndex()/10)))   #Compute non-linear Words-Per-Minute on POSix. 175->450 WPM. 450WPM max is specified by espeak.
+                if 'Darwin' in platform.system():
+                    Voices='Rishi Veena Moira Fiona Tessa Daniel Samantha Victoria Alex Fred'   #English only.
+                    #Voices='Ting-Ting Sin-Ji'  #macOS users can pick a specific language here, e.g. Chinese.
+                    #Voices='Daniel Alex Fred Samantha Victoria Tessa Fiona Karen Maged Ting-Ting Sin-Ji Mei-Jia Zuzana Sara Ellen Xander Rishi Veena Moira Satu Amelie Thomas Anna Melina Mariska Damayanti Alice Luca Kyoko Yuna Nora Zosia Luciana Joana Ioana Milena Yuri Laura Diego Paulina Juan Jorge Monica Alva Kanya Yelda'    #Uncomment this line to hear any language/accent.
+                    subprocess.Popen(['say','-v',random.choice(Voices.split()),'-r',WPM,Text])
+                else:
+                    try: subprocess.Popen(['espeak','-s',WPM,'-p',str(random.choice(range(100))),Text]) # espeak required on Linux to hear TTS. sudo apt install espeak. Random -p pitch.
+                    except: pass
     def ShowTX(self): self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))
     def AddressGen(self):
         wallet=self.window.wallet

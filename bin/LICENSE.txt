@@ -1,0 +1,2 @@
+All .dll files are copy-pasted from codeblocks-20.03, which is FOSS.
+All VanityTXID-Plugin executables rely on code copyrighted by Bitcoin & Bitcoin Core developers (MIT License).

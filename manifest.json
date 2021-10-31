@@ -1,7 +1,7 @@
 {
     "display_name": "VanityTXID",
-    "version": "1.3.4",
-    "description": "Generate TX which has ID starting with any choice of hex digits. First generate P2SH address which gets imported into a watching-only wallet, from which raw TX hex is copied to the original wallet, to be signed & mined.",
+    "version": "1.4.0",
+    "description": "Generate TX which has ID starting with any choice of hex digits. First generate P2SH address which gets imported into a watching-only wallet, from which raw TX hex is copied to the original wallet, to be signed & mined. TTS on Linux uses eSpeak.",
     "project_url": "https://github.com/TinosNitso/VanityTXID-Plugin",
     "minimum_ec_version": "3.6",
     "package_name": "VanityTXID",

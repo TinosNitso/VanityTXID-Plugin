@@ -2,7 +2,7 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.2.png)
 
-v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header.
+v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s.
 
 SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background, unlike 3.6.6. It also has newer code. The issue arises in both Windows & Linux.
 
@@ -12,15 +12,24 @@ SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background,
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 
-v1.3.4 SHA256 Checksum: 0c35dfc1734c78e52171a8c6d8c9156fa9829c55bd48aaa87e60e4c54fa8920f
+v1.4.0 SHA256 Checksum: cd254b21f771353738d80306f4f9648e8ef60d9e93b118b7786d20bd46c11693
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
 
-main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 gcc compiler flags. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux & macOS compiling don't use Icon.rc. A Windows project file with example arguments is included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Instead of the checksums, which keep changing every time I build, it's better to look at the exact number of bytes, e.g. 50,688 bytes. A simple exectuable is much less likely to be corrupt if everyone gets the exact same size build.
+main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 gcc compiler flags. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling don't use Icon.rc, and requires linking pthread library in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++11 -O3 ./main.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'A.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate.
 
-Linux requires eSpeak for TXID To Sound. Linux in VirtualBox (screenshot) is only half the speed it was in Windows' own Hyper-V, which doesn't support macOS.
+A Windows project file with example arguments is included, so others can build & run immediately (I just broadcast the payment so no one else can). There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Instead of the checksums, which keep changing every time I build, it's better to look at the exact number of bytes, e.g. 88,576 bytes. It should be possible to reproduce each build's exact size.
 
-Next update will have ~30% faster hash rate (eg just under 2MH/s) by using CSHA256 from Bitcoin Core (BCHN). I've discovered a bug when using 32-bit Windows 10, which doesn't allow the TXID To Sound option (unchecking that will fix the problem). Next update will fix this by calling PowerShell instead of mshta (MicroSoft HTml Application). Another bugfix is for when Linux doesn't have espeak. Also the plugin won't keep re-extracting its binaries every time we start EC. Also the WPM formula should be exponential (non-linear) in the @ Rate index, and I'll slow down the max WPM. espeak will use a random pitch, instead of random voice. The language translator doesn't work, except for one word at a time (I'm not sure if I should bother fixing it).
+Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in terminal). Linux in VirtualBox (screenshot) is probably only half the speed it was in Windows' own Hyper-V, but that one doesn't support macOS.
+
+v1.4.0:
+- ~31% speed increase by using Bitcoin Core's CSHA256 C++ code. Binary sizes are all much larger now. I've removed the zedwood license. In a future update I might bring it back as a UI selection, since zedwood probably wins on simplicity (imagine having to write every line yourself). Users might want to select between CryptoPP, OpenSSL, Bitcoin Core & zedwood, to check the hash rates. I've noticed results which are a bit too impressive inside Linux & macOS VMs. eg I got 1.4 MH/s using only 4 Threads in a very slow macOS Catalina VirtualBox. This should mean I get more than 1.9 MH/s natively in Windows. I'll probably try a native Linux test. It could be there's an issue with MinGW being slow (poor Windows build).
+- BugFix: Windows TTS now uses PowerShell -C instead of MSHTA (MicroSoft HTml App.) since the latter isn't allowed on 32-bit Windows 10 Home N.
+- Improved Python script. Only ever extract binaries from zip once, on enable (faster startup). Disabling plugin still removes all binaries.
+- BugFix: Hash rate was always over by ~1% (3*1/255) due to 'for' loops failing to catch a few used nonce bytes at #255 (or -1). I was just about to switch back from the new 'do' loops, due to them being 1% slower!
+- Random espeak pitch now in Linux, which is the synth version of random voice. BugFix: Lack of espeak no longer throws an error.
+- WPM (POSix) now exponential against Rate index. Default @ Rate 5. Max WPM reduced to 450.
+- There's still a bug when a plugin changes version number (wallet must restart to finish update). Language Translator not working (module can only handle one word at a time).
 
 v1.3.4:
 - Windows 64 bit binary (with i7-AVX tuning) slightly faster on my CPU (1.5 MH/s instead of 1.4 MH/s). Back in v1.1.0 I downgraded to 32-bit, before I could check the MH/s. Just because EC is 32-bit, doesn't mean its plugins should always be! TBH I haven't tested a 32-bit VM yet. The plugin has now doubled in size. I haven't rebuilt the posix binaries.

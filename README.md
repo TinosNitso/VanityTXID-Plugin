@@ -12,8 +12,6 @@ SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background,
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 
-v1.4.0 SHA256 Checksum: cd254b21f771353738d80306f4f9648e8ef60d9e93b118b7786d20bd46c11693
-
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved. A 0-conf message could be signed for using OP_CHECKDATASIG - the smart contract is just more complicated.
 
 main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 gcc compiler flags. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling don't use Icon.rc, and requires linking pthread library in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++11 -O3 ./main.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'A.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate.
@@ -22,7 +20,7 @@ A Windows project file with example arguments is included, so others can build &
 
 Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in terminal). Linux in VirtualBox (screenshot) is probably only half the speed it was in Windows' own Hyper-V, but that one doesn't support macOS.
 
-v1.4.0:
+v1.4.0: SHA256 Checksum: cd254b21f771353738d80306f4f9648e8ef60d9e93b118b7786d20bd46c11693
 - ~31% speed increase by using Bitcoin Core's CSHA256 C++ code. Binary sizes are all much larger now. I've removed the zedwood license. In a future update I might bring it back as a UI selection, since zedwood probably wins on simplicity (imagine having to write every line yourself). Users might want to select between CryptoPP, OpenSSL, Bitcoin Core & zedwood, to check the hash rates. I've noticed results which are a bit too impressive inside Linux & macOS VMs. eg I got 1.4 MH/s using only 4 Threads in a very slow macOS Catalina VirtualBox. This should mean I get more than 1.9 MH/s natively in Windows. I'll probably try a native Linux test. It could be there's an issue with MinGW being slow (poor Windows build).
 - BugFix: Windows TTS now uses PowerShell -C instead of MSHTA (MicroSoft HTml App.) since the latter isn't allowed on 32-bit Windows 10 Home N.
 - Improved Python script. Only ever extract binaries from zip once, on enable (faster startup). Disabling plugin still removes all binaries.

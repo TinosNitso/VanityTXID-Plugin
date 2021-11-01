@@ -6,9 +6,9 @@ v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th th
 
 SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background, unlike 3.6.6. It also has newer code. The issue arises on all 3 OSs.
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
-
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.3.png)
+
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.4.0.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 

@@ -4,7 +4,7 @@
 
 v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s (v1.4.0 uses BCHN sha256.cpp).
 
-SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background, unlike 3.6.6. It also has newer code. The issue arises in both Windows & Linux.
+SLP Edition version 3.6.7-dev6 doesn't use up a CPU processor in the background, unlike 3.6.6. It also has newer code. The issue arises on all 3 OSs.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot2.png)
 

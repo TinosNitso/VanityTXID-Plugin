@@ -4,7 +4,7 @@
 
 #include "sha256.h"
 
-#include "../compat/cpuid.h"
+//#include "../compat/cpuid.h"  //I doubt cpuid.h would help speed up VanityTXID.
 #include "common.h"
 
 #include <atomic>

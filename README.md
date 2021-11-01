@@ -1,14 +1,14 @@
 # VanityTXID-Plugin
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.2.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.3.2.png)
 
 v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s (v1.4.0 uses BCHN sha256.cpp).
 
 SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU consumption issue arises on all 3 OSs.
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.3.3.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.3.3.png)
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshot-v1.4.0.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.0.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 

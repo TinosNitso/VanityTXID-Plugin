@@ -27,9 +27,9 @@ static const signed char hexTable[256] = {
 };
 
 static inline
-uint8_t FromHexTup(const char hex[2]) {   //One byte return. Assumes valid input.
+uint8_t FromHexTup(const char hex[2], bool singleNibble) {   //One byte return. Assumes valid input.
     const uint8_t nibHi = hexTable[uint8_t(hex[0])];
-    const uint8_t nibLo = hexTable[uint8_t(hex[1])];
+    const uint8_t nibLo = singleNibble ? 0 : hexTable[uint8_t(hex[1])];
     return (nibHi << 4) | nibLo;
 }
 
@@ -46,7 +46,7 @@ std::vector<uint8_t> FromHex(const std::string &hex){
     std::vector<uint8_t> ret;
     ret.reserve(OutN);
     for (size_t i = 0; i < N; i += 2)
-        ret.push_back(FromHexTup(hex.data() + i));
+        ret.push_back(FromHexTup(hex.data() + i, i+1 < N));
     return ret;
 }
 

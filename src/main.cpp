@@ -46,7 +46,7 @@ std::vector<uint8_t> FromHex(const std::string &hex){
     std::vector<uint8_t> ret;
     ret.reserve(OutN);
     for (size_t i = 0; i < N; i += 2)
-        ret.push_back(FromHexTup(hex.data() + i, i+1 < N));
+        ret.push_back(FromHexTup(hex.data() + i, i+1 >= N));
     return ret;
 }
 

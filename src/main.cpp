@@ -1,5 +1,6 @@
 #include "crypto/sha256.cpp"    //That code is copyrighted by Bitcoin Core.
 
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <mutex>
@@ -64,7 +65,8 @@ void Hasher(const size_t ThreadN, const size_t Threads, char **argv) {
     const std::string PatternStr{argv[3]};
     const size_t PatternLen = PatternStr.length();
     const bool PatternOdd = PatternLen % 2;
-    const uint8_t PatternSize = PatternLen / 2; // In bytes, floor for odd, and 0 for singletons.
+    const size_t PatternSize = PatternLen / 2; // In bytes, floor for odd, and 0 for singletons.
+    assert(PatternSize <= 32); // assumption made by below code
     const std::vector<uint8_t> PatternVar = FromHex(PatternStr);
     const uint8_t* Pattern = PatternVar.data();
     const uint8_t PatternEnd = Hex2Num(PatternStr.data() + PatternLen-1);
@@ -74,7 +76,6 @@ void Hasher(const size_t ThreadN, const size_t Threads, char **argv) {
     std::vector<uint8_t> TXn = FromHex(TxHexStr);
 
     bool Finished;  //Variable initializations.
-    int8_t CheckByte;
     uint8_t SHA256[32];
     CSHA256 SHA256C;
     TXn[Pos]=ThreadN;   //This byte encodes the winning thread.
@@ -86,7 +87,7 @@ void Hasher(const size_t ThreadN, const size_t Threads, char **argv) {
         SHA256C.Finalize(SHA256);
         SHA256C.Reset();
         Finished=true;
-        for (CheckByte=0;CheckByte<PatternSize;CheckByte++)
+        for (uint8_t CheckByte = 0; CheckByte < PatternSize; ++CheckByte)
             Finished=Finished and Pattern[CheckByte]==SHA256[31-CheckByte];
         if (PatternOdd)
             Finished=Finished and PatternEnd==SHA256[31-PatternSize]>>4;

@@ -42,12 +42,7 @@ static void Hasher(const size_t &ThreadN, const size_t &nThreads, const int &Pos
     TXn[Pos+1]++;}while(TXn[Pos+1]);
     TXn[Pos]+=nThreads;}while(TXn[Pos]>=nThreads);    //Finish if passed 255.
 }
-static const char hexList[103] = {
-    -1, -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1,-1, -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1,-1, -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1, //Every 16'th char is missing a spacebar.
-    0,  1,   2,   3,   4,   5,   6,   7,  8,  9,  -1, -1, -1, -1, -1, -1,
-    -1, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, -1, -1, -1, -1, -1, -1, -1, -1, -1,-1, -1,  -1,  -1,  -1,  -1,  -1,  -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf    //Limiting to 103 technically produces a superior build.
-};
+static const uint8_t hexList[103] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf};
 static std::vector<uint8_t> FromHex(const std::string &hex){
     const size_t N = hex.size();
     std::vector<uint8_t> ret;

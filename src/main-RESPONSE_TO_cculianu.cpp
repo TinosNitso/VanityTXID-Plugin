@@ -1,5 +1,4 @@
 #include "crypto/sha256.cpp"    //Copy-pasted from BCHN.
-
 #include <cstdio>
 #include <mutex>
 #include <thread>
@@ -7,7 +6,7 @@
 
 std::once_flag EnsureOnly1Exit;   // ensure that if 2 threads happen to find a solution simultaneously, only 1 wins
 void Exit(const std::vector<uint8_t> &txn){
-    for (uint8_t byte : txn) std::printf("%02hhx", byte);
+    for (uint8_t byte : txn) std::printf("%02x", byte);
     exit(0);
 }
 void Hasher(uint8_t ThreadN, size_t nThreads, const size_t &Pos, const std::vector<uint8_t> &Pattern, const bool &PatternOdd, std::vector<uint8_t> TXn) {
@@ -20,9 +19,10 @@ void Hasher(uint8_t ThreadN, size_t nThreads, const size_t &Pos, const std::vect
         SHA256C.Write(TXn.data(), TXSize);
         SHA256C.Finalize(SHA256);
         SHA256C.Reset();
-        SHA256C.Write(SHA256,0x20);
+        SHA256C.Write(SHA256,32);
         SHA256C.Finalize(SHA256);
         SHA256C.Reset();
+
         Finished=true;
         for (uint8_t CheckByte = 0; CheckByte < Pattern.size()-PatternOdd; CheckByte++) Finished=Finished and Pattern[CheckByte]==SHA256[31-CheckByte];
         if (PatternOdd) Finished=Finished and Pattern.back()==SHA256[32-Pattern.size()]>>4;
@@ -59,5 +59,5 @@ int main(int argc, char **argv) {
     std::vector<uint8_t> TXn = FromHex(argv[4]);
     std::vector<std::thread> threads;
     for (uint8_t ThreadN = 0; ThreadN < nThreads; ThreadN++) threads.emplace_back(Hasher, ThreadN, nThreads, Pos, Pattern, PatternOdd, TXn);  //There are many arguments because others seem to care about the "speed" of FromHex.
-    threads[0].join();  // threads[0] could just as well be created here, so that main is no different to any other thread.
+    threads[0].join();  // threads[0]'s Hasher could just as well be created here. main is just a Hasher at this point.
 }

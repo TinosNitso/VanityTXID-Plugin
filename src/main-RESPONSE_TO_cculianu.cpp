@@ -36,11 +36,11 @@ void Hasher(uint8_t ThreadN, size_t nThreads, const size_t &Pos, const std::vect
     TXn[Pos+1]++;}while(TXn[Pos+1]);
     TXn[Pos]+=nThreads;}while(TXn[Pos]>=nThreads);    //Finish if passed 255.
 }
-int hexList[103] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf};
+uint8_t hexList[103] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf};
 std::vector<uint8_t> FromHex(std::string hex){
     std::vector<uint8_t> ret;
-    for (size_t i = 0; i < hex.size()-1; i += 2) ret.emplace_back(hexList[int(hex[i])]<<4 | hexList[int(hex[i+1])]);   //People claim std::stringstream is "slow", so I'm using hexList instead.
-    if (hex.size()%2) ret.emplace_back(hexList[int(hex.back())]);
+    for (size_t i = 0; i < hex.size()-1; i += 2) ret.emplace_back(hexList[(uint8_t)hex[i]]<<4 | hexList[(uint8_t)hex[i+1]]);   //People claim std::stringstream is "slow", so I'm using hexList instead.
+    if (hex.size()%2) ret.emplace_back(hexList[(uint8_t)hex.back()]);
     return ret;
 }
 int main(int argc, char **argv) {

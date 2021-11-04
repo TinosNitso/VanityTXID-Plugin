@@ -24,7 +24,7 @@ void Hasher(uint8_t ThreadN, size_t nThreads, const size_t &Pos, const std::vect
         SHA256C.Finalize(SHA256);
         SHA256C.Reset();
         Finished=true;
-        for (uint8_t CheckByte = 0; CheckByte < Pattern.size()-PatternOdd; ++CheckByte) Finished=Finished and Pattern[CheckByte]==SHA256[31-CheckByte];
+        for (uint8_t CheckByte = 0; CheckByte < Pattern.size()-PatternOdd; CheckByte++) Finished=Finished and Pattern[CheckByte]==SHA256[31-CheckByte];
         if (PatternOdd) Finished=Finished and Pattern.back()==SHA256[32-Pattern.size()]>>4;
         if (Finished) std::call_once(EnsureOnly1Exit, Exit, TXn);
     TXn[Pos+7]++;}while(TXn[Pos+7]);    //This byte changes the most.
@@ -45,7 +45,7 @@ std::vector<uint8_t> FromHex(std::string hex){
 }
 int main(int argc, char **argv) {
     if (argc < 5) {
-        std::fprintf(stderr, "Please pass 4 args to this console app, or else don't execute it directly. It's intended for use only with Electron Cash Python subprocess.Popen");
+        std::fprintf(stderr, "Please pass 4 args to this console app, or else don't execute it directly. It's intended for use with a wallet's Python subprocess.Popen");
         std::getchar(); //If anyone double clicks on us, they can read the message.
         return 1;
     }
@@ -58,6 +58,6 @@ int main(int argc, char **argv) {
 
     std::vector<uint8_t> TXn = FromHex(argv[4]);
     std::vector<std::thread> threads;
-    for (uint8_t ThreadN = 0; ThreadN < nThreads; ThreadN++) threads.emplace_back(Hasher, ThreadN, nThreads, Pos, Pattern, PatternOdd, TXn);  //I'm only doing it this way because others seem to care about the "speed" of FromHex.
-    threads[0].join();  // block forever, waiting for at least 1 thread to succeed
+    for (uint8_t ThreadN = 0; ThreadN < nThreads; ThreadN++) threads.emplace_back(Hasher, ThreadN, nThreads, Pos, Pattern, PatternOdd, TXn);  //There are many arguments because others seem to care about the "speed" of FromHex.
+    threads[0].join();  // threads[0] could just as well be created here, so that main is no different to any other thread.
 }

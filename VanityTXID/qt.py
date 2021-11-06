@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QMovie
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton, QCheckBox, QComboBox
 from electroncash.i18n import _ #Language translator doesn't work on more than one word at a time, at least not when I tested it.
 from electroncash.plugins import BasePlugin, hook
@@ -12,12 +12,12 @@ class Plugin(BasePlugin):
         self.windows, self.tabs, self.UIs = {}, {}, {}  #Initialize plugin wallet "dictionaries".
         
         Dir=self.parent.get_external_plugin_dir()+'/VanityTXID/'
-        self.ICO=Dir+'src/Icon.ico'
+        self.WebP=Dir+'bin/Icon.webp'    #QMovie only supports GIF & WebP. GIF is ugly.
         if shutil.os.path.exists(Dir): Extract=False   #Only ever extract zip (i.e. install) once.
         else:
             Extract=True
             Zip=zipfile.ZipFile(Dir[:-1]+'-Plugin.zip') #shutil._unpack_zipfile is an alternative function, but it'd extract everything.
-            Zip.extract('src/Icon.ico',Dir)
+            Zip.extract('bin/Icon.webp',Dir)
             Zip.extract('bin/LICENSE.txt',Dir)
         if 'Windows' in platform.system():
             if '64' in platform.machine(): binDir='bin/Windows/'
@@ -32,14 +32,19 @@ class Plugin(BasePlugin):
                 Zip.extract(Item,Dir)
                 subprocess.Popen(['chmod','+x',self.EXE])
         if Extract: Zip.close()
+        self.Icon=QIcon()   #QMovie waits for init_qt.
     def on_close(self):
         """BasePlugin callback called when the wallet is disabled among other things."""
+        del self.Movie, self.Icon, self.WebP, self.EXE
         for window in self.windows.values(): self.close_wallet(window.wallet)
         shutil.rmtree(self.parent.get_external_plugin_dir()+'/VanityTXID')
     @hook
     def init_qt(self, qt_gui):
         """Hook called when a plugin is loaded (or enabled)."""
         if self.UIs: return # We get this multiple times.  Only handle it once, if unhandled.
+        self.Movie=QMovie(self.WebP)    
+        self.Movie.frameChanged.connect(self.ChangeICO)
+        self.Movie.start()
         for window in qt_gui.windows: self.load_wallet(window.wallet, window)           # These are per-wallet windows.
     @hook
     def load_wallet(self, wallet, window):
@@ -50,24 +55,37 @@ class Plugin(BasePlugin):
         tab = window.create_list_tab(l)
         self.tabs[wallet_name] = tab
         self.UIs[wallet_name] = l
-        window.tabs.addTab(tab, QIcon(self.ICO), 'VanityTXID')
+        window.tabs.addTab(tab,self.Icon, 'VanityTXID') #Add Icon instantly in case WebP frame rate is slow.
     @hook
     def close_wallet(self, wallet):
         wallet_name = wallet.basename()
         try: self.UIs[wallet_name].Process.terminate() #Can't assume successful .terminate or else there's a disable bug.
         except: pass
+        del self.UIs[wallet_name]   #Delete UI now to stop Movie's tab connection, before tab removed.
         window = self.windows[wallet_name]
-        window.tabs.removeTab(window.tabs.indexOf(self.tabs.get(wallet_name)))
-        del self.UIs[wallet_name], self.tabs[wallet_name]
+        window.tabs.removeTab(window.tabs.indexOf(self.tabs[wallet_name]))
+        del self.tabs[wallet_name]
+    def ChangeICO(self):
+        self.Icon.addPixmap(self.Movie.currentPixmap())
+        for wallet_name in self.UIs.keys():
+            Tabs=self.windows[wallet_name].tabs
+            Tabs.setTabIcon(Tabs.indexOf(self.tabs[wallet_name]),self.Icon)
 class UI(QDialog):
     def __init__(self, window, plugin):
         QDialog.__init__(self, window)
         self.window=window
         self.plugin=plugin
 
-        Title=QLabel('VanityTXID v1.4.0')
+        Title=QLabel('VanityTXID v1.4.1')
         Title.setStyleSheet('font-weight: bold')
         Title.setAlignment(Qt.AlignCenter)
+        
+        Example = QPushButton(_('Example'))
+        Example.clicked.connect(self.Example)
+        
+        HBoxTitle=QHBoxLayout()
+        HBoxTitle.addWidget(Title,1)
+        HBoxTitle.addWidget(Example,.5)
 
         AddressesLabel=QLabel(_('VanityTXID Addresses: '))
         ConverterLabel=QLabel(_('Address Converter: '))
@@ -78,6 +96,7 @@ class UI(QDialog):
         self.AddressLine=QLineEdit()
         self.AddressLine.setReadOnly(True)
         self.FindAddresses()
+        self.AddressLine.setToolTip(_('Only these addresses can definitely be signed for. Not necessarily all address labels.'))
 
         self.Converter=QLineEdit()
         self.Converter.setPlaceholderText(_('Paste BCH addresses here to convert them to P2SH, enabling sigscript malleability. They are saved as address labels. After sending a coin, import them into a watching-only wallet.'))
@@ -95,7 +114,7 @@ class UI(QDialog):
         self.TXBox.setPlaceholderText(_("Paste raw TX hex here for inputs to be signed by this wallet wherever possible. It's TXID is then mined for the starting pattern below. Pattern & Message can be left blank, in which case the result can be mined on a separate PC. Remember to set a higher fee in the watching-only wallet preferences, like 1.2 sat/B. The fee depends on message size."))
 
         self.TextHex=QComboBox()
-        self.TextHex.addItems([_('(text)'),_('(hex)')])
+        self.TextHex.addItems(_('(text) (hex)').split())
         self.TextHex.activated.connect(self.HexConverter)
         VBoxType=QVBoxLayout()
         VBoxType.addWidget(QLabel(_('(hex)')))
@@ -130,29 +149,36 @@ class UI(QDialog):
         self.TTSLen=QComboBox()
         self.TTSLen.addItems('Pronounce '+str(Len) for Len in range(1,65))
         self.TTSLen.setCurrentIndex(15)
+        self.TTSLen.setToolTip(_('(hex) digits'))
         
         self.TTSRate=QComboBox()
         self.TTSRate.addItems('@ Rate '+str(Rate) for Rate in range(11))
         self.TTSRate.setCurrentIndex(5)
+        self.TTSRate.setToolTip('On POSIX 175*(450/175)**(Rate/10) WPM')
         
         self.ThreadsBox=QComboBox()
         self.ThreadsBox.addItems(str(N)+' Threads' for N in range(1,257))
         self.ThreadsBox.setCurrentIndex(shutil.os.cpu_count()-1)
+        self.ThreadsBox.setToolTip(_("Please don't increase above the default .cpu_count() since that can cause a hang bug. Also, hash rate computation assumes all threads are equal. Demonstrating the bugs is interesting."))
         
         self.TTS=QCheckBox(_('TXID To Sound'))
         self.TTS.setChecked(True)
+        self.TTS.setToolTip(_('On Linux requires espeak.'))
         self.TTS.toggled.connect(self.Toggled)
         self.l337=QCheckBox('1337')
+        self.l337.setToolTip(".translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))")
         self.ActivateWindow=QCheckBox('.activateWindow')
+        self.ActivateWindow.setToolTip(_('Helps provide visual alert when target TXID is generated.'))
         self.Notify=QCheckBox('.notify')
-        self.HashRate=QLabel(_('_.__ MH/s'))
+        self.HashRate=QLabel('_._____ MH/s _.___ s')
+        self.HashRate.setToolTip(_("Mega double Hashes per second, seconds. The 2nd hash's input is much smaller than the 1st."))
 
         HBoxOptions=QHBoxLayout()
         {HBoxOptions.addWidget(Widget) for Widget in [self.TTS,self.TTSLen,self.TTSRate,self.l337,self.ActivateWindow,self.Notify,self.ThreadsBox,self.HashRate]}
         {Label.setAlignment(Qt.AlignRight | Qt.AlignVCenter) for Label in [AddressesLabel,ConverterLabel,PatternLabel,MessageLabel]}
         
         VBox = QVBoxLayout()
-        VBox.addWidget(Title)
+        VBox.addLayout(HBoxTitle)
         VBox.addLayout(HBox)
         VBox.addWidget(self.TXBox)
         VBox.addLayout(HBoxConfig)
@@ -163,20 +189,25 @@ class UI(QDialog):
         self.HiddenBox=QPlainTextEdit()
         self.HiddenBox.textChanged.connect(self.ShowTX) #Hidden textbox allows primary Qt thread to show_transaction.
     def Clicked(self):
+        window=self.window
         if self.TextHex.currentText()==_('(text)'): Message=binascii.hexlify(self.Message.text().encode()).decode()
         else:
-            if not all([Char in '0123456789abcdefABCDEF' for Char in self.Message.text()]): return   #Valid Message hex?
+            if not all([Char in '0123456789ABCDEFabcdef' for Char in self.Message.text()]):
+                window.show_message('Invalid hex Message. Text setting would work.')
+                return   #Valid Message hex?
             if len(self.Message.text())%2: self.Message.insert('0') #Add 0 if someone wants an odd hex Message.
             Message=self.Message.text()
         Message=Message[:self.MaxMessage*2]
         
         self.Pattern=self.PatternLine.text()
-        if not all([Char in '0123456789abcdefABCDEF' for Char in self.Pattern]): return   #Valid Pattern hex?
-        
+        if not all([Char in '0123456789ABCDEFabcdef' for Char in self.Pattern]):
+            window.show_message("Invalid hex Pattern. Only '0123456789ABCDEFabcdef' characters are allowed.")
+            return
         TX=electroncash.Transaction(self.TXBox.toPlainText())
         try: TX.inputs()[0] and TX.outputs()    #Valid hex in text box?
-        except: return
-        window=self.window
+        except:
+            window.show_message("Invalid TX. Clicking on 'Example' provides a quick test.")
+            return
         wallet=window.wallet
         AllLabels=list(wallet.labels.values())
         Password=None
@@ -244,22 +275,23 @@ class UI(QDialog):
                 break
         TX=electroncash.Transaction(TX.serialize())
         try: NoncePos=int(TX.raw.find(SigScript)/2)-8
-        except: return     #User is attempting to mine txn which can't be mined.
-        
+        except:
+            window.show_message("TX.is_complete() but no VanityTXID inputs detected.")
+            return
         ThreadsN=self.ThreadsBox.currentIndex()+1
         Threads=bitcoin.int_to_hex(ThreadsN-1)    #I figure '00' means 1 since highest thread index is specified to C++ binary.
         Command=[self.plugin.EXE,Threads,bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,3)),self.Pattern,TX.raw] #3 Byte nonce position.
         if 'Windows' in platform.system(): self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
         else: self.Process=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-        threading.Thread(target=self.Bin,args=[len(TX.raw),NoncePos*2,ThreadsN]).start()
+        threading.Thread(target=self.Bin,args=[NoncePos*2,ThreadsN]).start()
 
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Process.terminate)
         self.Button.setText('.terminate')
-    def Bin(self,LenTX,HexPos,ThreadsN):
+    def Bin(self,HexPos,ThreadsN):
         Time=time.time()
-        TX=str(self.Process.communicate()[0])[2:2+LenTX]
-        Time2=time.time()
+        TX=self.Process.communicate()[0].decode()
+        Time=time.time()-Time
 
         self.Button.clicked.disconnect()
         self.Button.clicked.connect(self.Clicked)
@@ -273,13 +305,13 @@ class UI(QDialog):
         self.HiddenBox.setPlainText(TX)
         
         Nonces=1+int(TX[HexPos+2:HexPos+16],16)+int(int(TX[HexPos:HexPos+2],16)/ThreadsN)*256**7  #The number of nonces the winning thread got through. First byte increases by ThreadsN whenever it has to.
-        self.HashRate.setText(_(str(round(Nonces/1e6/(Time2-Time)*ThreadsN,2))+' MH/s'))
+        self.HashRate.setText(_(str(round(Nonces/1e6/Time*ThreadsN,5))+' MH/s '+str(round(Time,3))+' s'))
         
         if self.Notify.isChecked(): window.notify(TXID)
         if self.TTS.isChecked():
             Text=TXID[:self.TTSLen.currentIndex()+1]
             if self.l337.isChecked(): Text=Text.translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))
-            if 'Windows' in platform.system(): subprocess.Popen(['PowerShell','-C',"$V=New-Object -C SAPI.SPVoice;$V.Rate="+str(self.TTSRate.currentIndex())+";$V.Voice=$V.GetVoices().Item("+str(random.getrandbits(1))+");$V.Speak('"+Text+"')"],creationflags=0x8000000)  #Use slow PowerShell because MSHTA isn't allowed on 32-bit WIN10 Home N.
+            if 'Windows' in platform.system(): subprocess.Popen(['PowerShell','-C',"$V=New-Object -C SAPI.SPVoice;$V.Rate="+str(self.TTSRate.currentIndex())+";$V.Voice=$V.GetVoices().Item("+str(random.getrandbits(1))+");$V.Speak('"+Text+"')"],creationflags=0x8000000)  #A faster more complicated alternative is to pre-launch PowerShell. MSHTA isn't allowed on 32-bit WIN10 Home N. 
             else:
                 WPM=str(round(175*(450/175)**(self.TTSRate.currentIndex()/10)))   #Compute non-linear Words-Per-Minute on POSix. 175->450 WPM. 450WPM max is specified by espeak.
                 if 'Darwin' in platform.system():
@@ -289,7 +321,7 @@ class UI(QDialog):
                     subprocess.Popen(['say','-v',random.choice(Voices.split()),'-r',WPM,Text])
                 else:
                     try: subprocess.Popen(['espeak','-s',WPM,'-p',str(random.choice(range(100))),Text]) # espeak required on Linux to hear TTS. sudo apt install espeak. Random -p pitch.
-                    except: pass
+                    except: self.TTS.setChecked(False)
     def ShowTX(self): self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))
     def AddressGen(self):
         wallet=self.window.wallet
@@ -319,7 +351,7 @@ class UI(QDialog):
                     self.AddressLine.insert(label+' ')  #List all P2SH addresses.
             except: continue
     def HexConverter(self):
-        if self.TextHex.currentText()==_('(hex)'):
+        if self.TextHex.currentIndex():
             self.Message.setMaxLength(self.MaxMessage*2)
             self.Message.setText(binascii.hexlify(self.Message.text().encode()).decode())
         else:
@@ -327,4 +359,11 @@ class UI(QDialog):
             except: pass
             self.Message.setMaxLength(self.MaxMessage)
     def Toggled(self): {Box.setEnabled(self.TTS.isChecked()) for Box in [self.TTSLen,self.TTSRate,self.l337]}
-    
+    def Example(self):
+        self.TXBox.setPlainText('01000000013508f7c2e0a3237a47eaf10b9cc9d22a268715600b6f1c1a55e33edb0e00000000000000720008050000000002891f417612d9da396601a90d6a704f0f98e82affc827428210bad8207b714040b94bfdbec3708c44f3e9f34203ce6c07b43ac5820a25517a3960415b0d6b99474a44db412521039eb296a68925e890502b54881b220bb108d1c0676236a3180d5eb398e81c4f90ac7777feffffff01910c00000000000017a914f3aa0152467116c48638e01ff028256281f969898764e00a00')
+        self.PatternLine.setText('12345')
+        self.Message.clear()
+        self.ThreadsBox.setCurrentIndex(shutil.os.cpu_count()-1)
+        self.TTS.setChecked(True)
+        self.Clicked()
+        

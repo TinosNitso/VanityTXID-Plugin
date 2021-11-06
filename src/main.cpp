@@ -1,69 +1,48 @@
-#include <iostream>
-#include <sstream>
+#include <cstdio>	//Thanks to cculianu for suggesting this & <mutex>.
+#include <mutex>
 #include <thread>
-#include "crypto/sha256.cpp"    //That code is copyrighted by Bitcoin Core.
+#include "crypto/sha256.cpp"    //From BCHN.
 
-uint8_t FromHex(std::string Hex){   //One byte return.
-    std::stringstream SS;
-    SS<<std::hex<<Hex;
-    int Return;
-    SS>>Return;
+const uint8_t hexList[103]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,0xA,0xB,0xC,0xD,0xE,0xF,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf};
+uint8_t* FromHex(std::string Hex){  //Some claim std::stringstream is "slow", so I'm using hexList instead.
+    const int Len=Hex.length();
+    uint8_t* Return = new uint8_t[(Len+1)>>1];
+    for(int Ind=0;Ind<Len-1;Ind+=2) Return[Ind>>1]=hexList[(uint8_t)Hex[Ind]]<<4 | hexList[(uint8_t)Hex[Ind+1]];
+    if (Len%2) Return[Len>>1]=hexList[(uint8_t)Hex.back()];
     return Return;
 }
-void FromHex(uint8_t* Return,std::string Hex){  //Instead of returning std::string we can use first input as uint8_t* whose length is unknown.
-    int N=Hex.length();
-    std::stringstream SS;
-    int Char;
-    for(int n=0;n<N/2;n++){
-        SS<<std::hex<<(std::string){Hex[2*n],Hex[2*n+1]};
-        SS>>Char;
-        SS.clear();
-        Return[n]=Char;
-}}
-void Exit(const uint8_t* TXn,const uint32_t TXSize){    //Using an Exit function could generalize to a variable nonce size.
-    char Return[2*TXSize];
-    for (uint32_t i = 0; i < TXSize; i++)
-        sprintf(Return+2*i, "%02x", TXn[i]);
-    std::cout<<Return;
+std::once_flag EnsureOnly1Exit;   // ensure that if 2 threads happen to find a solution simultaneously, only 1 wins
+void Exit(uint8_t* TXn,int TXSize){
+    for (int Ind=0;Ind<TXSize;Ind++) std::printf("%02x", TXn[Ind]);
     exit(0);
 }
-void Hasher(int ThreadN,char **argv) {
-    int Threads=FromHex(argv[1])+1;
+void Hasher(uint8_t ThreadN,char **argv) {
+    int16_t ThreadsN=FromHex(argv[1])[0]+1;
+    uint8_t* NoncePos=FromHex(argv[2]);
+    const int Pos=NoncePos[0]<<16 | NoncePos[1]<<8 | NoncePos[2];
 
-    uint8_t NoncePos[3];
-    FromHex(NoncePos,argv[2]);
-    const uint32_t Pos=NoncePos[0]<<16 | NoncePos[1]<<8 | NoncePos[2];
+    const char PatternLen=std::string(argv[3]).length();
+    const uint8_t* Pattern=FromHex(argv[3]);
 
-    int PatternLen=std::string(argv[3]).length();
-    const bool PatternOdd=PatternLen%2;
-    const uint8_t PatternSize=PatternLen/2; // In bytes, floor for odd, and 0 for singletons.
-    uint8_t PatternVar[PatternSize];
-    FromHex(PatternVar,argv[3]);
-    const uint8_t* Pattern=PatternVar;
-    const uint8_t PatternEnd=FromHex({argv[3][PatternLen-1]});
-
-    const uint32_t TXSize=std::string(argv[4]).length()/2;
-    uint8_t TXn[TXSize];
-    FromHex(TXn,argv[4]);
-
-    bool Finished;  //Variable initializations.
-    int8_t CheckByte;
-    uint8_t SHA256[32];
-    CSHA256 SHA256C;
+    const int TXSize=std::string(argv[4]).length()>>1;
+    uint8_t* TXn=FromHex(argv[4]);
     TXn[Pos]=ThreadN;   //This byte encodes the winning thread.
-    do{do{do{do{do{do{do{do{    //'for' loops can't get to byte #255.
+
+    CSHA256 SHA256C;
+    uint8_t SHA256[32];
+    int8_t CheckByte;
+    do{do{do{do{do{do{do{do{    //'for' loops can't get to byte value 255, and cause hash rate miscalculations (1% over).
         SHA256C.Write(TXn,TXSize);
         SHA256C.Finalize(SHA256);
         SHA256C.Reset();
-        SHA256C.Write(SHA256,0x20);
+        SHA256C.Write(SHA256,32);
         SHA256C.Finalize(SHA256);
         SHA256C.Reset();
-        Finished=true;
-        for (CheckByte=0;CheckByte<PatternSize;CheckByte++)
-            Finished=Finished and Pattern[CheckByte]==SHA256[31-CheckByte];
-        if (PatternOdd)
-            Finished=Finished and PatternEnd==SHA256[31-PatternSize]>>4;
-        if (Finished) Exit(TXn,TXSize);
+
+        for (CheckByte=0;CheckByte<PatternLen>>1;CheckByte++) if (Pattern[CheckByte]!=SHA256[31-CheckByte]) goto GoTo;
+        if(PatternLen%2)if(Pattern[CheckByte]!=SHA256[31-CheckByte]>>4) goto GoTo;
+        std::call_once(EnsureOnly1Exit, Exit, TXn, TXSize);
+        GoTo:
     TXn[Pos+7]++;}while(TXn[Pos+7]);    //This byte changes the most.
     TXn[Pos+6]++;}while(TXn[Pos+6]);
     TXn[Pos+5]++;}while(TXn[Pos+5]);
@@ -71,12 +50,16 @@ void Hasher(int ThreadN,char **argv) {
     TXn[Pos+3]++;}while(TXn[Pos+3]);
     TXn[Pos+2]++;}while(TXn[Pos+2]);
     TXn[Pos+1]++;}while(TXn[Pos+1]);
-    TXn[Pos]+=Threads;}while(TXn[Pos]>=Threads);    //Finish if passed 255.
+    TXn[Pos]+=ThreadsN;}while(TXn[Pos]>=ThreadsN);    //Finish if passed 255.
 }
 int main(int argc , char **argv){
-    int Threads=FromHex(argv[1])+1;
-    std::thread Thread[Threads];
-    for (uint8_t ThreadN=1;ThreadN<Threads;ThreadN++)
-        Thread[ThreadN]=std::thread(Hasher,ThreadN,argv);
-    Hasher(0,argv); // ThreadN 0 is main itself.
+    if (argc < 5) {
+        std::fprintf(stderr, "Please pass 4 args to this console app, or else use wallet plugin. Pressing 'Enter' will return. ");
+        std::getchar(); //If anyone double clicks on exe, they can read the message.
+        return 1;
+    }
+    int16_t ThreadsN=FromHex(argv[1])[0]+1;
+    std::thread Threads[ThreadsN];
+    for (uint8_t ThreadN=0;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,argv);
+    Threads[0].join(); // ThreadN 0 is main itself.
 }

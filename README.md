@@ -2,11 +2,11 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.3.2.png)
 
-v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be four times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s (v1.4.0 uses BCHN sha256.cpp).
+v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be a few times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s (v1.4.0+ uses BCHN sha256.cpp).
 
-SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU consumption issue arises on all 3 OSs.
+SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue arises on all 3 OSs.
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.3.3.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.1.png)
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.0.png)
 
@@ -14,22 +14,30 @@ Generate txn IDs starting with a specific pattern, using a standard wallet + plu
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a confidential fee. eg a new version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
 
-main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++11 -O3 ./main.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'A.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate.
+main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++11 -O3 ./main.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate.
 
-A Windows project file with example arguments is included, so others can build & run immediately (I just broadcast the payment so no one else can). There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Instead of the checksums, which keep changing every time I build, it's better to look at the exact number of bytes, e.g. 88,576 bytes. It should be possible to reproduce each build's exact size.
+A Windows project file with example arguments is included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Instead of the checksums, which keep changing every time I build, it's better to look at the exact number of bytes, e.g. 86,528 bytes. It should be possible to reproduce each build's exact size.
 
-Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox combined with v1.4.0 produces surprisingly fast hash rates for all OSs. I did a native Linux test and speed (build quality) is the same as for Windows 10, so Code::Blocks' MinGW is probably fine.
+Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox produces surprisingly fast hash rates for all OSs. I did a native Linux test and speed (build quality) is the same as for Windows 10, so Code::Blocks' MinGW is probably fine.
 
-Next update will have better C++ [code](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/src/main-RESPONSE_TO_cculianu.cpp), but speed exactly the same. There will also be an animated icon (crypto wallets can play movies, too). Luckily animated icons use 0% of CPU, even with multiple wallets open. There will also be an 'Example' button so that new users can test the software immediately. Tooltips for many of the widgets, and messages for the possible errors (bad hex etc). UI improvements can be copied to other plugins.
+v1.4.1: SHA256 Checksum: c7f92fb851b3a8be5fa6da0739178b6e58211f90591f179461e13d999b536b10
+- Example button near title, which immediately demonstrates VanityTXID with a real example.
+- Appended time to hash rate. More decimals so at least one non-0 digit occurs.
+- window.show_message whenever there's a problem.
+- .setToolTip for many QtWidgets.
+- Animated Icon.webp. I've checked it uses 0% of CPU even with multiple wallets. It's just a BCH logo minute clock (1 FPS). I hope other plugins can do something more creative with the idea (playing movies inside a crypto wallet).
+- Added std::once_flag in C++ which now simplifies Python decoding of subprocess communication. Provide error msg if someone double clicks on exe. Simpler C++, with goto. Eliminated std::stringstream and compat/cpuid.h. Some improvements are thanks to pull request by cculianu. Speed may be like 0.1% faster; build sizes are smaller. A serious issue is whether we should switch to vectors instead of arrays. I chose arrays because vectors seem less quick.
+- Lack of espeak in Linux now unchecks the TTS box.
+- As usual, updating plugin version causes bug requiring EC restart.
 
-v1.4.0: SHA256 Checksum: cd254b21f771353738d80306f4f9648e8ef60d9e93b118b7786d20bd46c11693
+v1.4.0:
 - ~31% speed increase by using Bitcoin Core's CSHA256 C++ code. Binary sizes are all much larger now. I've removed the zedwood license. In a future update I might bring it back as a UI selection, since zedwood probably wins on simplicity (imagine having to write every line yourself). Users might want to select between CryptoPP, OpenSSL, Bitcoin Core & zedwood, to check the hash rates.
 - BugFix: Windows TTS now uses PowerShell -C instead of MSHTA (MicroSoft HTml App.) since the latter isn't allowed on 32-bit WIN10 Home N.
 - Improved Python script. Only ever extract binaries from zip once, on enable (faster startup). Disabling plugin still removes all binaries.
 - BugFix: Hash rate was always over by ~1% (3*1/255) due to 'for' loops failing to catch a few used nonce bytes at #255 (or -1). I was just about to switch back from the new 'do' loops, due to them being 1% slower!
 - Random espeak pitch now in Linux, which is the synth version of random voice. BugFix: Lack of espeak no longer throws an error.
 - WPM (POSix) now exponential against Rate index. Default @ Rate 5. Max WPM reduced to 450.
-- There's still a bug when a plugin changes version number (wallet must restart to finish update). Language Translator not working (module can only handle one word at a time).
+- Language Translator not working (module can only handle one word at a time).
 
 v1.3.4:
 - Windows 64 bit binary (with i7-AVX tuning) slightly faster on my CPU (1.5 MH/s instead of 1.4 MH/s). Back in v1.1.0 I downgraded to 32-bit, before I could check the MH/s. Just because EC is 32-bit, doesn't mean its plugins should always be! TBH I haven't tested a 32-bit VM yet. The plugin has now doubled in size. I haven't rebuilt the posix binaries.

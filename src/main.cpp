@@ -1,4 +1,3 @@
-#include <cstdio>	//Thanks to cculianu for suggesting this & <mutex>.
 #include <mutex>
 #include <thread>
 #include "crypto/sha256.cpp"    //From BCHN.

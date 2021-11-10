@@ -20,6 +20,8 @@ A Windows project file with example arguments is included, so others can build &
 
 Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox produces surprisingly fast hash rates for all OSs. I did a native Linux test and speed (build quality) is the same as for Windows 10, so Code::Blocks' MinGW is probably fine.
 
+Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
+
 v1.4.1: SHA256 Checksum: c7f92fb851b3a8be5fa6da0739178b6e58211f90591f179461e13d999b536b10
 - Example button near title, which immediately demonstrates VanityTXID with a real example.
 - Appended time to hash rate. More decimals so at least one non-0 digit occurs.

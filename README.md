@@ -22,6 +22,8 @@ Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in term
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
+Next version will enable vanity address generation using new binaries. It's almost three times as fast as VanitygenCash, but the addresses must start with 'p', instead of 'q'. Eventually a CLI is needed so that other plugins can Command this one to generate a vanity address &/or TXID for any smart contract. All smart contracts must have an address & TXID. Renaming to VanityP2SH might be good. .notify & .activateWindow will be combined. Hash rate will be copy/pasteable.
+
 v1.4.1: SHA256 Checksum: c7f92fb851b3a8be5fa6da0739178b6e58211f90591f179461e13d999b536b10
 - Example button near title, which immediately demonstrates VanityTXID with a real example.
 - Appended time to hash rate. More decimals so at least one non-0 digit occurs.

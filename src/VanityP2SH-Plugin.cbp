@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="VanityP2SH-Plugin" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="VanityP2SH-Plugin" prefix_auto="1" extension_auto="1" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="07 0026 prelay 21039eb296a68925e890502b54881b220bb108d1c0676236a3180d5eb398e81c4f90ac777708000000000000000075" />
+				<Option projectCompilerOptionsRelation="0" />
+				<Compiler>
+					<Add option="-O3" />
+				</Compiler>
+				<Linker>
+					<Add option="-O3" />
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-march=corei7-avx" />
+			<Add option="-O3" />
+			<Add option="-Wall" />
+		</Compiler>
+		<Linker>
+			<Add option="-s" />
+		</Linker>
+		<Unit filename="VanityP2SH.cpp" />
+		<Unit filename="VanityP2SH.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>

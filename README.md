@@ -22,6 +22,8 @@ Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
+For large scripts I've noticed that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste elsewhere (to vanitize large smart contract).
+
 v1.5.0: SHA256 Checksum: 978c0ea9e9114ed5939ba31d4294a00b746098ebce996bce97f876d80a403278
 - Vanity CashAddr generator now included (VanityP2SH). It can "vanitize" any smart contract. It's about quadruple the speed of VanitygenCash, if using only CPU. Only 1 address at a time can be generated, currently. e.g. www.blockchain.com/bch/address/pqqqqqqfucku9gl2l5vtsu8dzmllqg9xn5z34kcu80
 - Contacts instead of Address Labels. To use old VanityTXID addresses please re-generate them by 1st clearing the CashAddr Pattern, enter correct conversion address, then press Generate button and maybe delete old label. User should make a backup of the wallet, which contains the VanityTXID addresses, to avoid a lot of work reproducing vanity addresses (deterministically) from seed phrase. Eventually the contacts should be labelled too, but the SLP Ed. doesn't show Contact labels.

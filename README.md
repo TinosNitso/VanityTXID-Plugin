@@ -1,6 +1,6 @@
 # VanityTXID-Plugin
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.3.2.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
 v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be a few times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s (v1.4.0+ uses BCHN sha256.cpp).
 

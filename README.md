@@ -2,30 +2,36 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
-v1.3.2 screenshot used nonce '0300000000361edc', which corresponds to the 4th thread, and only took about half a minute. I suspect assembly code may be a few times faster than the 0.67 MH/s seen here. For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get just over 1.9 MH/s (v1.4.0+ uses BCHN sha256.cpp).
+v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get over 1.9 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).
 
-SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue arises on all 3 OSs.
+SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue arises on all 3 OSs. As of v1.5.0 I've dropped support for 3.6.6 due to the difference in how Wallet Contacts are handled.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.1.png)
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.0.png)
 
-Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
+Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Also generate vanity addresses, as well as vanity addresses for any Script (smart contract). Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a confidential fee. eg a new version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
 
-main.cpp & Icon.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++11 -O3 ./main.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate.
+VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++17 -O3 ./VanityTXID.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH.
 
-A Windows project file with example arguments is included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Instead of the checksums, which keep changing every time I build, it's better to look at the exact number of bytes, e.g. 86,528 bytes. It should be possible to reproduce each build's exact size.
+Windows project files with working example parameters are included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86,528 bytes.
 
-Linux requires eSpeak for TXID To Sound (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox produces surprisingly fast hash rates for all OSs. I did a native Linux test and speed (build quality) is the same as for Windows 10, so Code::Blocks' MinGW is probably fine.
+Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox gives good hash rates for all OSs. I did a native Linux test and speed as the same as for WIN10, so Code::Blocks' MinGW is probably fine.
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
-Next version will enable vanity address generation using new binaries. Will generate vanity CashAddr for arbitrary Script input. It's almost **quadruple** the speed of VanitygenCash, but the addresses must start with 'p', instead of 'q'. Eventually a CLI is needed so that other plugins can Command this one to generate a vanity address &/or TXID for any smart contract. All contracts must have an address & TXID. Renaming to VanityP2SH might be good. .notify & .activateWindow will be combined. Labels (e.g. hash rate) will be copy/pasteable. I've been delayed due to switching from using address labels to Wallet Contacts, which requires much more testing. Here is a v1.5.0 VanityTXID address:
-www.blockchain.com/bch/address/pqqqqqqfucku9gl2l5vtsu8dzmllqg9xn5z34kcu80
+v1.5.0: SHA256 Checksum: 978c0ea9e9114ed5939ba31d4294a00b746098ebce996bce97f876d80a403278
+- Vanity CashAddr generator now included (VanityP2SH). It can "vanitize" any smart contract. It's about quadruple the speed of VanitygenCash, if using only CPU. Only 1 address at a time can be generated, currently. e.g. www.blockchain.com/bch/address/pqqqqqqfucku9gl2l5vtsu8dzmllqg9xn5z34kcu80
+- Contacts instead of Address Labels. To use old VanityTXID addresses please re-generate them by 1st clearing the CashAddr Pattern, enter correct conversion address, then press Generate button and maybe delete old label. User should make a backup of the wallet, which contains the VanityTXID addresses, to avoid a lot of work reproducing vanity addresses (deterministically) from seed phrase. Eventually the contacts should be labelled too, but the SLP Ed. doesn't show Contact labels.
+- Color changing TabIcon. New shade of green from bitcoincashpodcast.com
+- Copy-pasteable labels, incl. hash rate.
+- .notify & .activateWindow combined.
+- New buttons, e.g. 'Search Contacts'. Still under 500 lines of Python! I've also slightly improved C++ code.
+- Users updating need to restart EC, as usual. Users of SLP Ed. 3.6.6 would need to update to a 3.6.7 pre-release (eg dev5) to continue using this plugin.
 
-v1.4.1: SHA256 Checksum: c7f92fb851b3a8be5fa6da0739178b6e58211f90591f179461e13d999b536b10
+v1.4.1:
 - Example button near title, which immediately demonstrates VanityTXID with a real example.
 - Appended time to hash rate. More decimals so at least one non-0 digit occurs.
 - window.show_message whenever there's a problem.

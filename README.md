@@ -2,7 +2,7 @@
 
 Warning: Input Script must be no longer than **510** Bytes (1020 digits). v1.5.0 allows script inputs up to 520B, which is incorrect, and could conceivably cause loss of money (especially on purpose). VanityP2SH appends 10B to the script, e.g. '08'+'00'*8+'75', and those 10B must be all or nothing. Next update will correct the limit.
 
-Another issue is that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste script elsewhere (to vanitize a large smart contract). Next version will remedy this & improve the TabIcon's sharpness, which is fluctuating.
+Another issue is that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste script elsewhere (to vanitize a large smart contract). Next version will remedy this & improve the TabIcon's sharpness, which is fluctuating. Support for SLP Ed. v3.6.6 should also be re-enabled, since it shouldn't be too much more work (code will be deleted later on).
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 

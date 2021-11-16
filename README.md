@@ -1,5 +1,9 @@
 # VanityTXID-Plugin
 
+Warning: Input Script must be no longer than **510** Bytes (1020 digits). v1.5.0 allows script inputs up to 520B, which is incorrect, and could conceivably cause loss of money (especially on purpose). VanityP2SH appends 10B to the script, e.g. '08'+'00'*8+'75', and those 10B must be all or nothing. Next update will correct the limit.
+
+Another issue is that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste script elsewhere (to vanitize a large smart contract). Next version will remedy this & improve the TabIcon's sharpness, which is fluctuating.
+ 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
 v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get over 1.9 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).
@@ -21,8 +25,6 @@ Windows project files with working example parameters are included, so others ca
 Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox gives good hash rates for all OSs. I did a native Linux test and speed as the same as for WIN10, so Code::Blocks' MinGW is probably fine.
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
-
-For large scripts I've noticed that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste elsewhere (to vanitize large smart contract).
 
 v1.5.0: SHA256 Checksum: 978c0ea9e9114ed5939ba31d4294a00b746098ebce996bce97f876d80a403278
 - Vanity CashAddr generator now included (VanityP2SH). It can "vanitize" any smart contract. It's about quadruple the speed of VanitygenCash, if using only CPU. Only 1 address at a time can be generated, currently. e.g. www.blockchain.com/bch/address/pqqqqqqfucku9gl2l5vtsu8dzmllqg9xn5z34kcu80

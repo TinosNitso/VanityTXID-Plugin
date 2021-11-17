@@ -4,7 +4,7 @@ Warning: Input Script must be no longer than **510** Bytes (1020 digits). v1.5.0
 
 Another issue is that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste script elsewhere (to vanitize a large smart contract). Next version will remedy this & 510B limit. Full support for SLP Ed. v3.6.6 will also be re-enabled.
  
-The next version will be much faster because I've figured out how to increase the # of threads. Including mutex was a bad option - I didn't understand how pointers between threads work. Getting the binaries to report their own hash rate will be tricky (releasing without accurate hash rate is a bit weak).
+The next version will enable higher thread numbers. In C++ instead of including mutex, it's much better to pass pointers to each thread so they can report back. Unfortunately increasing thread count doesn't speed up the hash rate (at least not for the TXID hashing). I max out at exactly 1.96 MH/s using both 8 & 64 threads, (double) hashing 207 Bytes.
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 

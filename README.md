@@ -4,6 +4,8 @@ Warning: Input Script must be no longer than **510** Bytes (1020 digits). v1.5.0
 
 Another issue is that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste script elsewhere (to vanitize a large smart contract). Next version will remedy this & 510B limit. Full support for SLP Ed. v3.6.6 will also be re-enabled.
  
+The next version will be much faster because I've figured out how to increase the # of threads. Including mutex was a bad option - I didn't understand how pointers between threads work. Getting the binaries to report their own hash rate will be tricky (releasing without accurate hash rate is a bit weak).
+ 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
 v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get over 1.9 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).

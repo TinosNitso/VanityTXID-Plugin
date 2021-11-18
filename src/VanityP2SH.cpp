@@ -1,4 +1,3 @@
-#include <mutex>
 #include <thread>
 #include "bitcoin-cash-node/crypto/sha256.cpp"
 #include "bitcoin-cash-node/crypto/ripemd160.cpp"
@@ -12,12 +11,7 @@ uint8_t* FromHex(std::string Hex){  //Some claim std::stringstream is "slow", so
     return Return;
 }
 const uint8_t CashAddrList[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,0,10,17,21,20,26,30,7,5,0,0,0,0,0,0,0,29,0,24,13,25,9,8,23,0,18,22,31,27,19,0,1,0,3,16,11,28,12,14,6,4,2,0,0,0,0,0,0,29,0,24,13,25,9,8,23,0,18,22,31,27,19,0,1,0,3,16,11,28,12,14,6,4,2};
-std::once_flag once_flag;   // ensure that if 2 threads happen to find a solution simultaneously, only 1 wins
-void Exit(uint8_t* Script,int16_t SSize){
-    for (int16_t Ind=0;Ind<SSize;Ind++) std::printf("%02x", Script[Ind]);
-    exit(0);
-}
-void Hasher(uint8_t ThreadN,char **argv) {
+void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
     uint8_t* NoncePos=FromHex(argv[2]);
     const int16_t Pos=NoncePos[0]<<8 | NoncePos[1];    //520B SSize limit.
@@ -52,11 +46,15 @@ void Hasher(uint8_t ThreadN,char **argv) {
     do{do{do{do{do{do{do{do{
         SHA256C.Reset().Write(Script,SSize).Finalize(SHA256);
         RIPEMD160C.Reset().Write(SHA256,32).Finalize(RIPEMD160);
+        if(*Bool) goto Finish;
         for(Byte=0;Byte<Bytes-1;Byte++)
-            if (Pattern[Byte] != RIPEMD160[Byte]) goto GoTo;
-        if (Pattern[Byte] != RIPEMD160[Byte]>>Shift) goto GoTo;  //Shift out irrelevant bits at the end (checks final byte even when bit-shifting by zero).
-        std::call_once(once_flag, Exit, Script, SSize);
-        GoTo:
+            if (Pattern[Byte] != RIPEMD160[Byte]) goto Continue;
+        if (Pattern[Byte] != RIPEMD160[Byte]>>Shift) goto Continue;  //Shift out irrelevant bits at the end (checks final byte even when bit-shifting by zero).
+        if(*Bool) goto Finish;  //Double check.
+        *Bool=true;
+        for (int16_t Ind=0;Ind<SSize;Ind++) std::printf("%02x", Script[Ind]);
+        goto Finish;
+        Continue:
     Script[Pos+7]++;}while(Script[Pos+7]);    //This byte changes the most.
     Script[Pos+6]++;}while(Script[Pos+6]);
     Script[Pos+5]++;}while(Script[Pos+5]);
@@ -65,6 +63,9 @@ void Hasher(uint8_t ThreadN,char **argv) {
     Script[Pos+2]++;}while(Script[Pos+2]);
     Script[Pos+1]++;}while(Script[Pos+1]);
     Script[Pos]+=ThreadsN;}while(Script[Pos]>=ThreadsN);    //Finish if passed 255.
+
+    Finish: *Nonces=(uint64_t) Script[Pos]/ThreadsN <<8*7;
+    for (Byte=1;Byte<8;Byte++) *Nonces |= (uint64_t) Script[Pos+Byte]<<8*(7-Byte);
 }
 int main(int argc , char **argv){
     if (argc < 5) {
@@ -72,8 +73,16 @@ int main(int argc , char **argv){
         std::getchar(); //If anyone double clicks on exe, they can read the message.
         return 1;
     }
+    bool Bool=false;    //Bool flips when finished.
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
+    int16_t ThreadN;
+    uint64_t Nonces[ThreadsN+1];    //Most threads will dump simultaneously which can misreport hash rate, unless an array is used.
     std::thread Threads[ThreadsN];
-    for (uint8_t ThreadN=0;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,argv);
-    Threads[0].join(); // ThreadN 0 is main itself.
+    for (ThreadN=0;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,&Bool,&Nonces[ThreadN],argv);
+
+    Nonces[ThreadsN]=ThreadsN; //Sum total in final element. All threads misreport nonce total by 1, because that's simpler.
+    for (ThreadN=0;ThreadN<ThreadsN;ThreadN++){
+            Threads[ThreadN].join();
+            Nonces[ThreadsN]+=Nonces[ThreadN];
+    } std::printf(" %llx",Nonces[ThreadsN]);
 }

@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QMovie
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton, QCheckBox, QComboBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPlainTextEdit, QPushButton, QCheckBox, QComboBox, QMessageBox
 from electroncash.i18n import _ #Language translator doesn't work on more than one word at a time, at least not when I tested it.
 from electroncash.plugins import BasePlugin, hook
 import electroncash, subprocess, threading, zipfile, shutil, gc, random, binascii, time, platform
@@ -27,13 +27,14 @@ class Plugin(BasePlugin):
             binDir='bin/'+platform.system()+'/'
             self.exeTXID , self.exeP2SH = Dir+binDir+'VanityTXID-Plugin' , Dir+binDir+'VanityP2SH-Plugin'
             if Extract:
-                for exe in {self.exeTXID,self.exeP2SH}: Zip.extract(exe.lstrip(Dir),Dir), subprocess.Popen(['chmod','+x',exe])
+                {Zip.extract(exe.lstrip(Dir),Dir) for exe in {self.exeTXID, self.exeP2SH}}
+                subprocess.Popen(['chmod','+x',self.exeTXID,self.exeP2SH])
         if Extract: Zip.close()
         self.Icon=QIcon()   #QMovie waits for init_qt.
     def on_close(self):
         """BasePlugin callback called when the wallet is disabled among other things."""
         del self.Movie, self.Icon, self.WebP, self.exeTXID, self.exeP2SH
-        for window in self.windows.values(): self.close_wallet(window.wallet)
+        {self.close_wallet(window.wallet) for window in self.windows.values()}
         shutil.rmtree(self.parent.get_external_plugin_dir()+'/VanityTXID')
     @hook
     def init_qt(self, qt_gui):
@@ -41,7 +42,7 @@ class Plugin(BasePlugin):
         if self.UIs: return # We get this multiple times.  Only handle it once, if unhandled.
         self.Movie=QMovie(self.WebP)    
         self.Movie.frameChanged.connect(self.setTabIcon), self.Movie.start()
-        for window in qt_gui.windows: self.load_wallet(window.wallet, window)           # These are per-wallet windows.
+        {self.load_wallet(window.wallet, window) for window in qt_gui.windows}  # These are per-wallet windows.
     @hook
     def load_wallet(self, wallet, window):
         """Hook called when a wallet is loaded and a window opened for it."""
@@ -67,19 +68,19 @@ class Plugin(BasePlugin):
         self.Icon.addPixmap(self.Movie.currentPixmap())
         for wallet_name in self.UIs.keys():
             Tabs=self.windows[wallet_name].tabs
-            Tabs.setTabIcon(Tabs.indexOf(self.tabs[wallet_name]),self.Icon)
+            Tabs.setTabIcon(Tabs.indexOf(self.tabs[wallet_name]),self.Icon) #It's probably more elegant to keep track of each tab index using a pyqt5 signal connection, instead of constantly asking for it. How?
 class UI(QDialog):
     MaxMessage=520 #Other languages like Chinese require a few bytes per character.
-    ButtonTextTXID=_('Sign TX and/or Mine TXID')
+    ButtonTextTXID=_('Sign TX and/or Generate TXID')
     ButtonTextP2SH=_('Generate Address')
+    BCH32='qpzry9x8gf2tvdw0s3jn54khce6mua7l'
     
     def __init__(self, window, plugin):
         QDialog.__init__(self, window)
-        self.window=window
-        self.plugin=plugin
+        self.window, self.plugin = window, plugin
         self.UIdict={}   #Store all VanityTXID addresses in a dictionary. This dict is used to ask wallet for private key/s when needed. Has form {P2SH: Script,P2PKH}. Updated using Search button etc.
 
-        Title=QLabel('VanityTXID v1.5.0 (+VanityP2SH)')
+        Title=QLabel('VanityTXID v1.5.1 (+VanityP2SH)')
         Title.setStyleSheet('font-weight: bold')
         Title.setAlignment(Qt.AlignCenter)
         
@@ -95,7 +96,7 @@ class UI(QDialog):
         AddrPatternLabel=QLabel(_('CashAddr Starting Pattern: '))
         ScriptLabel=QLabel(_('(hex) Script: '))
         VBoxAddressesLabels=QVBoxLayout()
-        for Label in [AddressesLabel,ConverterLabel,AddrPatternLabel,ScriptLabel]: VBoxAddressesLabels.addWidget(Label)
+        {VBoxAddressesLabels.addWidget(Label) for Label in [AddressesLabel, ConverterLabel, AddrPatternLabel, ScriptLabel]}
         
         self.AddressLine=QLineEdit()
         self.AddressLine.setReadOnly(True)
@@ -104,70 +105,59 @@ class UI(QDialog):
         SearchButton=QPushButton(_('Search Contacts'))
         SearchButton.clicked.connect(self.SearchContacts)
         HBoxAddresses=QHBoxLayout()
-        HBoxAddresses.addWidget(self.AddressLine)
-        HBoxAddresses.addWidget(SearchButton)
+        {HBoxAddresses.addWidget(Widget) for Widget in [self.AddressLine, SearchButton]}
 
         self.Converter=QLineEdit()
         self.Converter.setPlaceholderText(_('Paste BCH address here and press button below, to convert it to P2SH, enabling sigscript malleability.'))
-        self.Converter.setToolTip(_('Default receiving address is default.'))
+        self.Converter.setToolTip(_('Default receiving address is default.\nPressing spacebar etc can correct the Script below.'))
         self.Converter.textChanged.connect(self.ScriptGen)
                 
         self.AddrPattern=QLineEdit()
         self.AddrPattern.setPlaceholderText(_('(Optional) CashAddr pattern. Vanity-Generator for P2SH addresses.'))
         self.AddrPattern.setText('pqqqqq')
-        self.AddrPattern.setToolTip(_('''The leading p doesn't actually "exist" on the blockchain, only the digits after it do. For PoW, q=0.'''))
+        self.AddrPattern.setToolTip(_("The leading 'p' doesn't exist as a digit on the blockchain, only the digits after it do.\nq₃₂=0\nCashAddr digits are:\n"+self.BCH32+'\n'+self.BCH32.swapcase()))  #₃₂ means base 32.
         self.AddrPattern.setMaxLength(16)   #With 8B nonce probably won't reach 16 CashAddr chars (difficulty 32**14*4/16**16=256x harder).
         
         self.Script=QLineEdit()
-        self.Script.setPlaceholderText(_('Enter any valid contract Script here, enter CashAddr Pattern above, and press Generate button below to generate a contractual vanity address.'))
-        self.Script.setMaxLength(1040)  #520B limit for Scripts.
-        self.Script.setToolTip(_("Editing this is very risky. This is the contract."))
+        self.Script.setPlaceholderText(_('Enter any contract Script here (510B limit), enter CashAddr Pattern above, and press Generate button below to generate a contractual vanity address.'))
+        self.Script.setMaxLength(510*2)  #510B limit for Script input (output has +10B for VanityP2SH).
+        self.Script.setToolTip(_("Editing this is risky. This is the contract.\n510B limit (1020 digits)."))
         self.Converter.setText(window.wallet.get_receiving_address().to_ui_string())    #Display VanityTXID Script for receiving_address.
         
         VBoxAddresses=QVBoxLayout()
         VBoxAddresses.addLayout(HBoxAddresses)
-        VBoxAddresses.addWidget(self.Converter)
-        VBoxAddresses.addWidget(self.AddrPattern)
-        VBoxAddresses.addWidget(self.Script)
-        
-        HBox=QHBoxLayout()
-        HBox.addLayout(VBoxAddressesLabels)
-        HBox.addLayout(VBoxAddresses)
+        {VBoxAddresses.addWidget(Line) for Line in [self.Converter, self.AddrPattern, self.Script]}
+        HBoxP2SH=QHBoxLayout()
+        {HBoxP2SH.addLayout(VBox) for VBox in [VBoxAddressesLabels, VBoxAddresses]}
 
         self.ButtonP2SH=QPushButton(self.ButtonTextP2SH)
         self.ButtonP2SH.clicked.connect(self.clickedP2SH)
 
         self.TXBox = QPlainTextEdit()
-        self.TXBox.setPlaceholderText(_("Paste raw TX hex here for inputs to be signed by this wallet wherever possible. It's TXID is then mined for the starting pattern below. Pattern & Message can be left blank, in which case the result can be mined on a separate PC. Remember to set a higher fee in the watching-only wallet preferences, like 1.2 sat/B. The fee depends on message size."))
+        self.TXBox.setPlaceholderText(_("Paste raw TX hex here for inputs to be signed by this wallet wherever possible. It's TXID is then generated for the starting pattern below. Pattern & Message can be left blank, in which case the TXID can be generated on a separate PC. Remember to set a higher fee in the watching-only wallet preferences, like 1.2 sat/B. The fee depends on message size."))
 
         self.TextHex=QComboBox()
         self.TextHex.addItems(_('(text) (hex)').split())
         self.TextHex.activated.connect(self.HexConverter)
         VBoxType=QVBoxLayout()
-        VBoxType.addWidget(QLabel(_('(hex)')))
-        VBoxType.addWidget(self.TextHex)
+        {VBoxType.addWidget(Widget) for Widget in [QLabel(_('(hex)')), self.TextHex]}
 
         PatternLabel=QLabel(_('TXID Starting Pattern: '))
         MessageLabel=QLabel(_('Sigscript Message: '))
         VBoxLabels=QVBoxLayout()
-        VBoxLabels.addWidget(PatternLabel)
-        VBoxLabels.addWidget(MessageLabel)
-
-        VBoxConfig=QVBoxLayout()
+        {VBoxLabels.addWidget(Label) for Label in [PatternLabel, MessageLabel]}
+        
         self.PatternLine=QLineEdit('00000')
         self.PatternLine.setMaxLength(32)  #With 8 Byte nonce, unlikely to get more than 16.
         self.PatternLine.setPlaceholderText(_('(Optional) Enter starting pattern for TXID.'))
-        VBoxConfig.addWidget(self.PatternLine)
-        
         self.Message=QLineEdit()
         self.Message.setPlaceholderText(_('(Optional) Enter message. It appears first in all the newly created sigscripts. 520 Byte limit.'))
         self.Message.setMaxLength(self.MaxMessage)
-        VBoxConfig.addWidget(self.Message)
+        VBoxConfig=QVBoxLayout()
+        {VBoxConfig.addWidget(Line) for Line in [self.PatternLine, self.Message]}
         
         HBoxConfig=QHBoxLayout()
-        HBoxConfig.addLayout(VBoxType)
-        HBoxConfig.addLayout(VBoxLabels)
-        HBoxConfig.addLayout(VBoxConfig)
+        {HBoxConfig.addLayout(Layout) for Layout in [VBoxType, VBoxLabels, VBoxConfig]}
 
         self.ButtonTXID = QPushButton(self.ButtonTextTXID)
         self.ButtonTXID.clicked.connect(self.clickedTXID)
@@ -185,38 +175,39 @@ class UI(QDialog):
         self.ThreadsBox=QComboBox()
         self.ThreadsBox.addItems(str(N)+' Threads' for N in range(1,257))
         self.ThreadsBox.setCurrentIndex(shutil.os.cpu_count()-1)
-        self.ThreadsBox.setToolTip(_("Please don't increase above the default .cpu_count() since that can cause a hang bug.\nAlso, hash rate computation assumes all threads are equal.\nDemonstrating the bugs is interesting."))
+        self.ThreadsBox.setToolTip(_("Default is .cpu_count().\nMore Threads won't increase hash rate."))
         
-        self.TTSbox=QCheckBox(_('TTS'))
-        self.TTSbox.setChecked(True)
-        self.TTSbox.setToolTip(_('Text To Sound (Address & TXID)\nOn Linux requires espeak.'))
-        self.TTSbox.toggled.connect(self.toggled)
+        self.TTSBox=QCheckBox(_('TTS'))
+        self.TTSBox.setChecked(True)
+        self.TTSBox.setToolTip(_('Text-To-Speech (Address & TXID)\nOn Linux requires espeak.'))
+        self.TTSBox.toggled.connect(self.toggled)
         self.l337=QCheckBox('1337')
         self.l337.setToolTip(".translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))")
+        HBoxTTS=QHBoxLayout()
+        {HBoxTTS.addWidget(Widget) for Widget in [self.TTSBox, self.TTSLen, self.TTSRate, self.l337]}   #All TTS options should go together. I'm starting to like 'for' loops done in reverse.
         
         self.notify=QCheckBox('.notify')
         self.notify.setToolTip(_('.notify & .activateWindow when finished.'))
         self.RateLabel=QLabel('_._____ MH/s · _.___ s')
-        self.RateLabel.setToolTip(_("Mega double Hashes per second · seconds. The 2nd hash's input is smaller than the 1st.\nTXID hashes are much slower than address hashes."))
+        self.RateLabel.setToolTip(_("Mega double Hashes per second · seconds\nThe 2nd hash's input is smaller than the 1st.\nTXID SHA-256d are usually much slower than SHA-256/RIPEMD-160, except for large Scripts."))
 
         HBoxOptions=QHBoxLayout()
-        for Widget in [self.TTSbox,self.TTSLen,self.TTSRate,self.l337,self.notify,self.ThreadsBox,self.RateLabel]: HBoxOptions.addWidget(Widget)
+        HBoxOptions.addLayout(HBoxTTS)
+        {HBoxOptions.addWidget(Widget) for Widget in [self.notify,self.ThreadsBox,self.RateLabel]}
         
-        for Label in {AddressesLabel,ConverterLabel,AddrPatternLabel,ScriptLabel,PatternLabel,MessageLabel}: Label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        for Label in {Title,AddressesLabel,ConverterLabel,AddrPatternLabel,ScriptLabel,PatternLabel,MessageLabel,self.RateLabel}: Label.setTextInteractionFlags(Qt.TextSelectableByMouse)   #All Labels copy-pasteable.
+        {Label.setAlignment(Qt.AlignRight | Qt.AlignVCenter) for Label in {AddressesLabel,ConverterLabel,AddrPatternLabel,ScriptLabel,PatternLabel,MessageLabel}}
+        {Label.setTextInteractionFlags(Qt.TextSelectableByMouse) for Label in {Title,AddressesLabel,ConverterLabel,AddrPatternLabel,ScriptLabel,PatternLabel,MessageLabel,self.RateLabel}}     #Copy-pasteable labels.
         
         VBox = QVBoxLayout()
-        VBox.addLayout(HBoxTitle)
-        VBox.addLayout(HBox)
-        VBox.addWidget(self.ButtonP2SH)
-        VBox.addWidget(self.TXBox)
+        {VBox.addLayout(HBox) for HBox in [HBoxTitle, HBoxP2SH]}
+        {VBox.addWidget(Widget) for Widget in [self.ButtonP2SH, self.TXBox]}
         VBox.addLayout(HBoxConfig)
         VBox.addWidget(self.ButtonTXID)
         VBox.addLayout(HBoxOptions)
         self.setLayout(VBox)
         
-        self.HiddenBox=QPlainTextEdit()
-        self.HiddenBox.textChanged.connect(self.show_transaction) #Hidden textbox allows primary Qt thread to show_transaction.
+        self.HiddenBoxTXID=QPlainTextEdit()
+        self.HiddenBoxTXID.textChanged.connect(self.show_transaction) #Hidden textbox allows primary Qt thread to show_transaction.
         self.HiddenBoxP2SH=QPlainTextEdit()
         self.HiddenBoxP2SH.textChanged.connect(self.show_message) #.show_message(Script)
     def clickedTXID(self):
@@ -305,45 +296,50 @@ class UI(QDialog):
         Command=[self.plugin.exeTXID,bitcoin.int_to_hex(ThreadsN-1),bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,3)),Pattern,TX.raw] #00 threads corresponds to just 1. 3 Byte nonce position can handle large TX.
         if 'Windows' in platform.system(): self.processTXID=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
         else: self.processTXID=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-        threading.Thread(target=self.communicateTXID,args=[NoncePos*2,ThreadsN]).start()
-
-        self.ButtonTXID.clicked.disconnect()
-        self.ButtonTXID.clicked.connect(self.processTXID.terminate)
-        self.ButtonTXID.setText('.terminate')
-    def communicateTXID(self,HexPos,ThreadsN):
+        threading.Thread(target=self.communicateTXID).start()
+        self.ButtonTXID.clicked.disconnect(), self.ButtonTXID.clicked.connect(self.processTXID.terminate), self.ButtonTXID.setText('.terminate')
+    def communicateTXID(self):
         Time=time.time()    #I've verified there's no time delay from starting this thread.
-        TX=self.processTXID.communicate()[0].decode()
+        communicate=self.processTXID.communicate()[0].decode()
         Time=time.time()-Time
 
-        self.ButtonTXID.clicked.disconnect()
-        self.ButtonTXID.clicked.connect(self.clickedTXID)
-        self.ButtonTXID.setText(self.ButtonTextTXID)
-
-        try: TXID=electroncash.Transaction(TX).txid_fast()
-        except: return  #.terminate occurred.
+        self.ButtonTXID.clicked.disconnect(), self.ButtonTXID.clicked.connect(self.clickedTXID), self.ButtonTXID.setText(self.ButtonTextTXID)
+        if not communicate: return  #.terminate occurred.
         
+        TX,Nonces=communicate.split()
+        TXID=electroncash.Transaction(TX).txid_fast()
         if self.notify.isChecked():
             window=self.window
             window.notify(TXID), window.activateWindow()
-        self.HiddenBox.setPlainText(TX)
-        self.HashRate(TX[HexPos:HexPos+16],ThreadsN,Time)
+        self.HiddenBoxTXID.setPlainText(TX)
+        self.RateLabel.setText(_(str(round(int(Nonces,16)/1e6/Time,5))+' MH/s · '+str(round(Time,3))+' s'))
         self.TTS(TXID)
-    def show_transaction(self): self.window.show_transaction(electroncash.Transaction(self.HiddenBox.toPlainText()))    #.show_message is also possible here.
+    def show_transaction(self): self.window.show_transaction(electroncash.Transaction(self.HiddenBoxTXID.toPlainText()))    #.show_message is also possible here.
     def SearchContacts(self):
         wallet=self.window.wallet
         self.AddressLine.clear()
-        for Contact in wallet.contacts.get_all():
-            if Contact.type!='address': continue    #Not address.
-            if not Contact.name: continue   #Empty .name where Script must be.
-            Script=Contact.name.split()[0]
-            try:    #Don't assume 'Script' is a Script.
-                ContactAddress=electroncash.address.Address.from_string(Contact.address)
-                if ContactAddress!=ContactAddress.from_multisig_script(bitcoin.bfh(Script)): continue #address must match Script.
-            except: continue
-            P2PKHaddress=self.IsOurScript(Script)
-            if not P2PKHaddress: continue
-            self.UIdict[ContactAddress]=Script,P2PKHaddress
-            self.AddressLine.insert(Contact.address+' ')
+        try:
+            for Contact in wallet.contacts.get_all():
+                try:
+                    Script=Contact.name.split()[0]
+                    ContactAddress=electroncash.address.Address.from_string(Contact.address)
+                    if ContactAddress!=ContactAddress.from_multisig_script(bitcoin.bfh(Script)): continue #address must match Script.
+                except: continue
+                P2PKHaddress=self.IsOurScript(Script)
+                if not P2PKHaddress: continue
+                self.UIdict[ContactAddress]=Script,P2PKHaddress
+                self.AddressLine.insert(Contact.address+' ')
+        except: #EC-v3.6.6 backwards compatibility.
+            for Key in wallet.contacts.keys():
+                try:
+                    Script=wallet.contacts[Key][1].split()[0]
+                    ContactAddress=electroncash.address.Address.from_string(Key)
+                    if ContactAddress!=ContactAddress.from_multisig_script(bitcoin.bfh(Script)): continue #address must match Script.
+                except: continue
+                P2PKHaddress=self.IsOurScript(Script)
+                if not P2PKHaddress: continue
+                self.UIdict[ContactAddress]=Script,P2PKHaddress
+                self.AddressLine.insert(Key+' ')
     def HexConverter(self):
         if self.TextHex.currentIndex():
             self.Message.setMaxLength(self.MaxMessage*2)
@@ -352,18 +348,17 @@ class UI(QDialog):
             try: self.Message.setText(bitcoin.bfh(self.Message.text()).decode())
             except: pass
             self.Message.setMaxLength(self.MaxMessage)
-    def toggled(self): {Box.setEnabled(self.TTSbox.isChecked()) for Box in {self.TTSLen,self.TTSRate,self.l337}}
+    def toggled(self): {Box.setEnabled(self.TTSBox.isChecked()) for Box in {self.TTSLen,self.TTSRate,self.l337}}
     def Example(self):
-        self.TXBox.setPlainText('0100000001811a89e09c0e06d29d59c5b42432972b8b274212e439c5d77fe3a2c543000000000000007c000801000000000120154136dfa8821f2e7cb02e1edeadbe05ad963c900877b201986d38e2dc36f3a0456aef6794aea08d2a39958a86013c06a6a52191c905a6563c5b420d279e6ce3e2be412f21039eb296a68925e890502b54881b220bb108d1c0676236a3180d5eb398e81c4f90ac77770805000000008f5d9c75feffffff01fb3000000000000017a91400000009e62dc2a3eafd18b870ed16fff020a69d87b2e50a00')
+        self.TXBox.setPlainText('01000000018fe7b7c647778b337e106c5842a2eef3abf844e64bf76424be7e44ba480285dc010000007c0008040000000000291f41793cca46ed191139756ea05c64010bf4efcd47fffc3479b666d06245f39b4692b151e8b8dd714f1aa224df994807201440055deb7fd649afb12ca5d46956a693412f21039eb296a68925e890502b54881b220bb108d1c0676236a3180d5eb398e81c4f90ac77770805000000008f5d9c75feffffff01718200000000000017a91400000009e62dc2a3eafd18b870ed16fff020a69d8749e70a00')
         self.PatternLine.setText('12345')
         self.Message.clear()
         self.ThreadsBox.setCurrentIndex(shutil.os.cpu_count()-1)
-        self.TTSbox.setChecked(True)
+        self.TTSBox.setChecked(True)
         self.clickedTXID()
     def clickedP2SH(self):
         Pattern=self.AddrPattern.text()
-        BCH32='qpzry9x8gf2tvdw0s3jn54khce6mua7l'
-        BCH32+=BCH32.swapcase()
+        BCH32=self.BCH32+self.BCH32.swapcase()
         window=self.window
         if not all([Char in BCH32 for Char in Pattern]) or Pattern and Pattern[0] not in 'pP' or len(Pattern)>1 and Pattern[1] not in 'qpzrQPZR':
             window.show_message("Invalid P2SH CashAddr Pattern. Must start with 'p' or 'P'. 2nd char must be chosen from 'qpzrQPZR'. All chars must be from '"+BCH32+"'.")
@@ -375,39 +370,36 @@ class UI(QDialog):
         if Pattern in {'','p'}: #No vanity address (old VanityTXID).
             self.AddContactVerify(Script)
             return
-        Nonce='08'+'00'*8+'75'  #'75'=OP_DROP Addition to arbitrary Script. 
-        Script+=Nonce
+        Nonce='08'+'00'*8+'75'  #'75'=OP_DROP
+        Script+=Nonce   #Contracts might prefer the nonce go at the end.
         NoncePos=int(Script.find(Nonce)/2)+1
         
         ThreadsN=self.ThreadsBox.currentIndex()+1
         Command=[self.plugin.exeP2SH,bitcoin.int_to_hex(ThreadsN-1),bitcoin.rev_hex(bitcoin.int_to_hex(NoncePos,2)),Pattern,Script] #2 Byte nonce position can handle large Script.
         if 'Windows' in platform.system(): self.processP2SH=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,creationflags=0x8000000|0x4000)  #CREATE_NO_WINDOW|BELOW_NORMAL_PRIORITY_CLASS
         else: self.processP2SH=subprocess.Popen(Command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
-        threading.Thread(target=self.communicateP2SH,args=[NoncePos*2,ThreadsN]).start()
-
-        self.ButtonP2SH.clicked.disconnect()
-        self.ButtonP2SH.clicked.connect(self.processP2SH.terminate)
-        self.ButtonP2SH.setText('.terminate')
-    def communicateP2SH(self,HexPos,ThreadsN):
+        threading.Thread(target=self.communicateP2SH).start()
+        self.ButtonP2SH.clicked.disconnect(), self.ButtonP2SH.clicked.connect(self.processP2SH.terminate), self.ButtonP2SH.setText('.terminate')
+    def communicateP2SH(self):
         Time=time.time()    #I've verified there's no time delay from starting this thread.
-        Script=self.processP2SH.communicate()[0].decode()
+        communicate=self.processP2SH.communicate()[0].decode()
         Time=time.time()-Time
 
-        self.ButtonP2SH.clicked.disconnect()
-        self.ButtonP2SH.clicked.connect(self.clickedP2SH)
-        self.ButtonP2SH.setText(self.ButtonTextP2SH)
-
-        if not Script: return   #.terminate()
+        self.ButtonP2SH.clicked.disconnect(), self.ButtonP2SH.clicked.connect(self.clickedP2SH), self.ButtonP2SH.setText(self.ButtonTextP2SH)
+        if not communicate: return  #.terminate occurred.
+        
+        Script,Nonces=communicate.split()
         Address=electroncash.address.Address.from_multisig_script(bitcoin.bfh(Script)).to_ui_string()
         if self.notify.isChecked():
             window=self.window
             window.notify(Address), window.activateWindow()
         self.AddContactVerify(Script)
-        self.HashRate(Script[HexPos:HexPos+16],ThreadsN,Time)
+        self.RateLabel.setText(_(str(round(int(Nonces,16)/1e6/Time,5))+' MH/s · '+str(round(Time,3))+' s'))
         self.TTS(Address)
-    def show_message(self):
-        self.window.show_message(self.HiddenBoxP2SH.toPlainText())
-        self.SearchContacts()  #A mysterious bug on Linux is fixed by only ever using the *primary* thread to .SearchContacts().
+    def show_message(self): 
+        self.SearchContacts()   #Linux requires .SearchContacts() is executed only by the primary Qt thread.
+        Box=QMessageBox()
+        Box.setText(self.HiddenBoxP2SH.toPlainText()), Box.setDetailedText(self.HiddenBoxP2SH.toPlainText()), Box.setTextInteractionFlags(Qt.TextSelectableByMouse), Box.exec()    #.show_full_ui_string() is another possibility, but the bitcoincash: prefix gets in the way.
     def ScriptGen(self):
         for Word in self.Converter.text().split():   #Loop over inputs until a good address is found.
             try:
@@ -432,14 +424,14 @@ class UI(QDialog):
         P2PKHaddress=self.IsOurScript(Script)
         if P2PKHaddress:
             window=self.window
-            window.wallet.contacts.add(electroncash.contacts.Contact(Script+' VANITYTXID SCRIPT FROM '+P2PKHaddress.to_ui_string(),P2SHaddress,'address'),unique=True)
+            wallet=window.wallet
+            Name=Script+' VANITYTXID SCRIPT FROM '+P2PKHaddress.to_ui_string()
+            try: wallet.contacts.add(electroncash.contacts.Contact(Name,P2SHaddress,'address'),unique=True)
+            except: wallet.contacts[P2SHaddress]=('address',Name) #EC-v3.6.6 backwards compatibility.
             window.update_wallet()    #Refresh GUI Contacts
-        self.HiddenBoxP2SH.setPlainText(P2SHaddress+'\nAbove is the Address for the script (hex) below:\n'+Script+'\nAddress & Script have now been saved as a Contact in Wallet Contacts, if they belong to this wallet & have VanityTXID form.\nAfter sending the address a coin, import it into a watching-only wallet & use the Send→Preview button to obtain the TX hex needed for VanityTXID.')
-    def HashRate(self,Nonce,ThreadsN,Time):
-        Nonces=1+int(Nonce[2:],16)+int(int(Nonce[:2],16)/ThreadsN)*256**7  #The number of nonces the winning thread got through. First byte increases by ThreadsN whenever it has to.
-        self.RateLabel.setText(_(str(round(Nonces/1e6/Time*ThreadsN,5))+' MH/s · '+str(round(Time,3))+' s'))
+        self.HiddenBoxP2SH.setPlainText(P2SHaddress+'\n'+Script+"\nare the vanity address & its Script.\nPress 'Show Details...' to Copy the full Script etc. All details are already saved as a Contact in Wallet Contacts, but only if this wallet can sign for the Script.\nMoney sent to this address may be lost if a mistake has been made.\nAfter sending a coin to the address, import it into a watching-only wallet & use the Send→Preview→Copy buttons to obtain the TX hex needed for VanityTXID in this wallet.")
     def TTS(self,Text):
-        if not self.TTSbox.isChecked(): return
+        if not self.TTSBox.isChecked(): return
         Text=Text[:self.TTSLen.currentIndex()+1]    #Works even if 64>Address length.
         if self.l337.isChecked(): Text=Text.translate(dict(zip(map(ord,'0123456789'),'OlZEASGTBP')))
         if 'Windows' in platform.system(): subprocess.Popen(['PowerShell','-C',"$V=New-Object -C SAPI.SPVoice;$V.Rate="+str(self.TTSRate.currentIndex())+";$V.Voice=$V.GetVoices().Item("+str(random.getrandbits(1))+");$V.Speak('"+Text+"')"],creationflags=0x8000000)  #A faster more complicated alternative is to pre-launch PowerShell. MSHTA isn't allowed on 32-bit WIN10 Home N. 
@@ -452,4 +444,4 @@ class UI(QDialog):
                 subprocess.Popen(['say','-v',random.choice(Voices.split()),'-r',WPM,Text])
             else:
                 try: subprocess.Popen(['espeak','-s',WPM,'-p',str(random.choice(range(100))),Text]) # espeak required on Linux to hear TTS. sudo apt install espeak. Random -p pitch.
-                except: self.TTSbox.setChecked(False)
+                except: self.TTSBox.setChecked(False)

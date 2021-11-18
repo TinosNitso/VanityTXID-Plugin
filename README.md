@@ -14,7 +14,7 @@ SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU proc
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.1.png)
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.0.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.1.png)
 
 Generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Also generate vanity addresses, as well as vanity addresses for any Script (smart contract). Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
 

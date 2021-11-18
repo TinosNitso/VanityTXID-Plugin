@@ -1,14 +1,8 @@
 # VanityTXID-Plugin
-
-Warning: Input Script must be no longer than **510** Bytes (1020 digits). v1.5.0 allows script inputs up to 520B, which is incorrect, and could conceivably cause loss of money (especially on purpose). VanityP2SH appends 10B to the script, e.g. '08'+'00'*8+'75', and those 10B are all or nothing.
-
-Another issue is that .show_message truncates the output (vanity script). In that case the user needs to double-click & copy-paste script elsewhere (to vanitize a large smart contract). Next version will remedy this & 510B limit. Full support for SLP Ed. v3.6.6 will also be re-enabled.
- 
-The next version will enable higher thread numbers. In C++ instead of including mutex, it's much better to pass pointers to each thread so they can report back. Unfortunately increasing thread count doesn't speed up the hash rate (at least not for the TXID hashing). I max out at exactly 1.96 MH/s using both 8 & 64 threads, (double) hashing 207 Bytes, & 256 threads got me 1.93 MH/s. True hash rate measurements for both generators are exactly the same as I've previously reported, using only 8 threads.
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
-v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get over 1.9 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).
+v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).
 
 SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue arises on all 3 OSs. As of v1.5.0 I've dropped support for 3.6.6 due to the difference in how Wallet Contacts are handled.
 

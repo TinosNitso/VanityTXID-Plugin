@@ -20,7 +20,7 @@ Generate txn IDs starting with a specific pattern, using a standard wallet + plu
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a confidential fee. eg a new version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
 
-VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks, instead enter 'g++ -std=c++17 -O3 ./VanityTXID.cpp' into terminal. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH.
+VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks. Instead copy paste src to home folder, then Open Terminal.app, enter 'cd src', then 'g++ -std=c++17 -O3 ./VanityTXID.cpp'. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH.
 
 Windows project files with working example parameters are included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86,528 bytes.
 
@@ -28,14 +28,22 @@ Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
-v1.5.0: SHA256 Checksum: 978c0ea9e9114ed5939ba31d4294a00b746098ebce996bce97f876d80a403278
+v1.5.1: SHA256 Checksum: 1f16f32ea4921a16aa1d424b0b15a4765ef237b44540e0117d48fa3e51643beb
+- Support for SLP Ed. v3.6.6 re-instated! I just prefer 3.6.7 (pre-releases). Screenie for macOS added.
+- Max sized Scripts can now be displayed after vanity address generation.
+- All new binaries now enable any number of threads without any bugs. Surprisingly 8 are just as fast as 64, so we weren't missing out on anything. Instead of including mutex, it's much better to pass pointer/s to each thread so they report back. I prefer to time only in Python.
+- Combined some simple lines of Python code, and reversed some simple 'for' loops using set notation.
+- Technically a new Icon.webp where the ₿ is animated & shrunk to 32p before being placed on top of the colored circles.
+- As usual please restart EC during update (re-install).
+
+v1.5.0:
 - Vanity CashAddr generator now included (VanityP2SH). It can "vanitize" any smart contract. It's about quadruple the speed of VanitygenCash, if using only CPU. Only 1 address at a time can be generated, currently. e.g. www.blockchain.com/bch/address/pqqqqqqfucku9gl2l5vtsu8dzmllqg9xn5z34kcu80
 - Contacts instead of Address Labels. To use old VanityTXID addresses please re-generate them by 1st clearing the CashAddr Pattern, enter correct conversion address, then press Generate button and maybe delete old label. User should make a backup of the wallet, which contains the VanityTXID addresses, to avoid a lot of work reproducing vanity addresses (deterministically) from seed phrase. Eventually the contacts should be labelled too, but the SLP Ed. doesn't show Contact labels.
 - Color changing TabIcon. New shade of green from bitcoincashpodcast.com
 - Copy-pasteable labels, incl. hash rate.
 - .notify & .activateWindow combined.
 - New buttons, e.g. 'Search Contacts'. Still under 500 lines of Python! I've also slightly improved C++ code.
-- Users updating need to restart EC, as usual. Users of SLP Ed. 3.6.6 would need to update to a 3.6.7 pre-release (eg dev5) to continue using this plugin.
+- Users of SLP Ed. 3.6.6 would need to update to a 3.6.7 pre-release (eg dev5) to continue using this plugin.
 
 v1.4.1:
 - Example button near title, which immediately demonstrates VanityTXID with a real example.
@@ -45,7 +53,6 @@ v1.4.1:
 - Animated Icon.webp. I've checked it uses 0% of CPU even with multiple wallets. It's just a BCH logo minute clock (1 FPS). I hope other plugins can do something more creative with the idea (playing movies inside a crypto wallet).
 - Added std::once_flag in C++ which now simplifies Python decoding of subprocess communication. Provide error msg if someone double clicks on exe. Simpler C++, with goto. Eliminated std::stringstream and compat/cpuid.h. Some improvements are thanks to pull request by cculianu. Speed may be like 0.1% faster; build sizes are smaller. A serious issue is whether we should switch to vectors instead of arrays. I chose arrays because vectors seem less quick.
 - Lack of espeak in Linux now unchecks the TTS box.
-- As usual, updating plugin version causes bug requiring EC restart.
 
 v1.4.0:
 - ~31% speed increase by using Bitcoin Core's CSHA256 C++ code. Binary sizes are all much larger now. I've removed the zedwood license. In a future update I might bring it back as a UI selection, since zedwood probably wins on simplicity (imagine having to write every line yourself). Users might want to select between CryptoPP, OpenSSL, Bitcoin Core & zedwood, to check the hash rates.

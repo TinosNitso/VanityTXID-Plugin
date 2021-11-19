@@ -1,5 +1,7 @@
 # VanityTXID-Plugin
  
+Next version, 1.6.0, will include a third app, **VanityHash**, to vanitize any file's SHA256 Checksum, by appending an 8B nonce. These document hashes are fundamental to various protocols. I can easily get a pattern 3 long for the full 1.3MiB .zip plugin, itself. What's interesting is putting very powerful apps all inside a Bitcoin wallet. I'll also re-build the VanityTXID-Plugin exe since the winning thread is missing 'goto Finish' & accidentally does an extra hash at the end (tiny speed issue due to code Copy-Paste missing a line).
+ 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
 v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).
@@ -14,7 +16,7 @@ Generate txn IDs starting with a specific pattern, using a standard wallet + plu
 
 A fundamental issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a confidential fee. eg a new version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
 
-VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks. Instead copy paste src to home folder, then Open Terminal.app, enter 'cd src', then 'g++ -std=c++17 -O3 ./VanityTXID.cpp'. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH.
+VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks. Instead extract/copy src to home folder, then open Terminal.app, enter 'cd src', then 'g++ -std=c++17 -O3 ./VanityTXID.cpp'. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH.
 
 Windows project files with working example parameters are included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86,016 bytes.
 
@@ -25,7 +27,7 @@ Windows users can compare 64-bit to 32-bit performance by replacing all binaries
 v1.5.1: SHA256 Checksum: 1f16f32ea4921a16aa1d424b0b15a4765ef237b44540e0117d48fa3e51643beb
 - Support for SLP Ed. v3.6.6 re-instated! I just prefer 3.6.7 (pre-releases). Screenie for macOS added.
 - Max sized Scripts can now be displayed after vanity address generation.
-- All new binaries now enable any number of threads without any bugs. Surprisingly 8 are just as fast as 64, so we weren't missing out on anything. Instead of including mutex, it's much better to pass pointer/s to each thread so they report back. I prefer to time only in Python.
+- All new executables now enable any number of threads without any bugs. Surprisingly 8 are just as fast as 64, so we weren't missing out on anything. Instead of including mutex, it's much better to pass pointer/s to each thread so they report back. I prefer to time only in Python.
 - Combined some simple lines of Python code, and reversed some simple 'for' loops using set notation.
 - Technically a new Icon.webp where the ₿ is animated & shrunk to 32p before being placed on top of the colored circles.
 - As usual please restart EC during update (re-install).

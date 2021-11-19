@@ -1,6 +1,6 @@
 # VanityTXID-Plugin
  
-Next version, 1.6.0, will include a third app, **VanityHash**, to vanitize any file's SHA256 Checksum, by appending an 8B nonce. These document hashes are fundamental to various protocols. What's interesting is putting powerful apps all inside a Bitcoin wallet. I'll also re-build the VanityTXID-Plugin exe since the winning thread is missing 'goto Finish' & accidentally does an extra hash at the end (tiny speed issue due to code Copy-Paste missing a line).
+Next version, 1.6.0, will include a third app, **VanityHash**, to vanitize any file's SHA256 Checksum, by appending an 8B nonce. These document hashes are fundamental to various protocols. VanityTXID-Plugin.zip Checksum should start with a few zeros (under 30secs to generate). I like putting powerful apps all inside a Bitcoin wallet. I'll re-build the VanityTXID-Plugin exe since the winning thread is missing 'goto Finish' & accidentally does an extra hash at the end (tiny speed issue due to code Copy-Paste missing a line).
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 

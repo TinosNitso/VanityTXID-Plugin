@@ -8,7 +8,7 @@ v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread
 
 SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue arises on all 3 OSs. As of v1.5.0 I've dropped support for 3.6.6 due to the difference in how Wallet Contacts are handled.
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/Screenshot-v1.4.1.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.6.0.png)
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.1.png)
 
@@ -24,13 +24,18 @@ Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
+v1.6.0:
+- VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of each file.
+- Button icons. Address generator MessageBox improved. No nonce for CashAddr Pattern 'P' (same as 'p'). 
+- In C++, 'goto Finish' moved to better place.
+- As usual please restart EC during update (re-install).
+
 v1.5.1: SHA256 Checksum: 1f16f32ea4921a16aa1d424b0b15a4765ef237b44540e0117d48fa3e51643beb
 - Support for SLP Ed. v3.6.6 re-instated! I just prefer 3.6.7 (pre-releases). Screenie for macOS added.
 - Max sized Scripts can now be displayed after vanity address generation.
 - All new executables now enable any number of threads without any bugs. Surprisingly 8 are just as fast as 64, so we weren't missing out on anything. Instead of including mutex, it's much better to pass pointer/s to each thread so they report back. I prefer to time only in Python.
 - Combined some simple lines of Python code, and reversed some simple 'for' loops using set notation.
 - Technically a new Icon.webp where the ₿ is animated & shrunk to 32p before being placed on top of the colored circles.
-- As usual please restart EC during update (re-install).
 
 v1.5.0:
 - Vanity CashAddr generator now included (VanityP2SH). It can "vanitize" any smart contract. It's about quadruple the speed of VanitygenCash, if using only CPU. Only 1 address at a time can be generated, currently. e.g. www.blockchain.com/bch/address/pqqqqqqfucku9gl2l5vtsu8dzmllqg9xn5z34kcu80

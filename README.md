@@ -1,7 +1,5 @@
 # VanityTXID-Plugin
  
-Next version, 1.6.0, will include a third app, **VanityHash**, to vanitize any file's SHA256 Checksum, by appending an 8B nonce. These document hashes are fundamental to various protocols. VanityTXID-Plugin.zip Checksum should start with a few zeros (under 30secs to generate for 1.3MiB). I like putting powerful apps all inside a Bitcoin wallet. I'll re-build the VanityTXID-Plugin exe since the winning thread is missing 'goto Finish' & accidentally does an extra hash at the end (tiny speed issue due to code Copy-Paste missing a line).
- 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
 v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash).

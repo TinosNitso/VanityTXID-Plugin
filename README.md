@@ -23,7 +23,7 @@ Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
 v1.6.0: SHA256 Checksum: **00003449a1e19a94d82dc7185c1845802c6c3c8aebd67e8083243f5415d9dde1** (0.4 kH/s · 7 mins)
-- VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of each file.
+- VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 0000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of the file.
 - Button icons. Address generator MessageBox improved. No nonce for CashAddr Pattern 'P' (same as 'p'). 
 - In C++, 'goto Finish' moved to better place.
 - As usual please restart EC during update (re-install).

@@ -21,7 +21,7 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     uint8_t Pattern[Bytes];
     Pattern[0]=0;
     int8_t Byte=0;
-    int8_t Shift=11;    //Bit-Shift amount btwn 0 & 7. 11 is just an initialization to get the 1st 2b right (q, p, z or r). There should be a more elegant technique than what I've done here.
+    int8_t Shift=11;    //Bit-Shift amount btwn 0 & 7. 11 is just an initialization to get the 1st 2b right (q, p, z or r).
     String.erase(0,1);  //1st 'p' is irrelevant.
     for (uint8_t Char: String){
         if(Shift>=5){
@@ -46,15 +46,15 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     do{do{do{do{do{do{do{do{
         SHA256C.Reset().Write(Script,SSize).Finalize(SHA256);
         RIPEMD160C.Reset().Write(SHA256,32).Finalize(RIPEMD160);
-        if(*Bool) goto Finish;
+
         for(Byte=0;Byte<Bytes-1;Byte++)
             if (Pattern[Byte] != RIPEMD160[Byte]) goto Continue;
         if (Pattern[Byte] != RIPEMD160[Byte]>>Shift) goto Continue;  //Shift out irrelevant bits at the end (checks final byte even when bit-shifting by zero).
         if(*Bool) goto Finish;  //Double check.
         *Bool=true;
-        for (int16_t Ind=0;Ind<SSize;Ind++) std::printf("%02x", Script[Ind]);
-        goto Finish;
+        for (int16_t Ind=0;Ind<SSize;Ind++) printf("%02x", Script[Ind]);
         Continue:
+        if(*Bool) goto Finish;
     Script[Pos+7]++;}while(Script[Pos+7]);    //This byte changes the most.
     Script[Pos+6]++;}while(Script[Pos+6]);
     Script[Pos+5]++;}while(Script[Pos+5]);
@@ -64,13 +64,14 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     Script[Pos+1]++;}while(Script[Pos+1]);
     Script[Pos]+=ThreadsN;}while(Script[Pos]>=ThreadsN);    //Finish if passed 255.
 
-    Finish: *Nonces=(uint64_t) Script[Pos]/ThreadsN <<8*7;
-    for (Byte=1;Byte<8;Byte++) *Nonces |= (uint64_t) Script[Pos+Byte]<<8*(7-Byte);
+    Finish:
+        *Nonces=(uint64_t) Script[Pos]/ThreadsN <<8*7;
+        for (Byte=1;Byte<8;Byte++) *Nonces |= (uint64_t) Script[Pos+Byte]<<8*(7-Byte);
 }
 int main(int argc , char **argv){
     if (argc < 5) {
-        std::fprintf(stderr, "Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
-        std::getchar(); //If anyone double clicks on exe, they can read the message.
+        fprintf(stderr, "Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
+        getchar(); //If anyone double clicks on exe, they can read the message.
         return 1;
     }
     bool Bool=false;    //Bool flips when finished.
@@ -84,5 +85,5 @@ int main(int argc , char **argv){
     for (ThreadN=0;ThreadN<ThreadsN;ThreadN++){
             Threads[ThreadN].join();
             Nonces[ThreadsN]+=Nonces[ThreadN];
-    } std::printf(" %llx",Nonces[ThreadsN]);
+    } printf(" %llx",Nonces[ThreadsN]);
 }

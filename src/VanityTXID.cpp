@@ -28,15 +28,15 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
         SHA256C.Reset().Write(TXn,TXSize).Finalize(SHA256);
         SHA256C.Reset().Write(SHA256,32).Finalize(SHA256);
 
-        if(*Bool) goto Finish;
         for (CheckByte=0;CheckByte<PatternLen>>1;CheckByte++)
             if (Pattern[CheckByte]!=SHA256[31-CheckByte]) goto Continue;
         if(PatternLen%2)
             if(Pattern[CheckByte]!=SHA256[31-CheckByte]>>4) goto Continue;
         if(*Bool) goto Finish;  //Double check.
         *Bool=true;
-        for (int Ind=0;Ind<TXSize;Ind++) std::printf("%02x", TXn[Ind]); //Thanks to cculianu for suggesting std::printf
-        Continue:
+        for (int Ind=0;Ind<TXSize;Ind++) printf("%02x", TXn[Ind]); //Thanks to cculianu for suggesting printf
+
+        Continue: if(*Bool) goto Finish;
     TXn[Pos+7]++;}while(TXn[Pos+7]);    //This byte changes the most.
     TXn[Pos+6]++;}while(TXn[Pos+6]);
     TXn[Pos+5]++;}while(TXn[Pos+5]);
@@ -46,13 +46,14 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     TXn[Pos+1]++;}while(TXn[Pos+1]);
     TXn[Pos]+=ThreadsN;}while(TXn[Pos]>=ThreadsN);    //Finish if passed 255.
 
-    Finish: *Nonces=(uint64_t) TXn[Pos]/ThreadsN <<8*7;
-    for (CheckByte=1;CheckByte<8;CheckByte++) *Nonces |= (uint64_t) TXn[Pos+CheckByte]<<8*(7-CheckByte);
+    Finish:
+        *Nonces=(uint64_t) TXn[Pos]/ThreadsN <<8*7;
+        for (CheckByte=1;CheckByte<8;CheckByte++) *Nonces |= (uint64_t) TXn[Pos+CheckByte]<<8*(7-CheckByte);
 }
 int main(int argc , char **argv){
     if (argc < 5) {
-        std::fprintf(stderr, "Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
-        std::getchar(); //If anyone double clicks on exe, they can read the message.
+        fprintf(stderr, "Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
+        getchar(); //If anyone double clicks on exe, they can read the message.
         return 1;
     }
     bool Bool=false;    //Bool flips when finished.
@@ -66,5 +67,5 @@ int main(int argc , char **argv){
     for (ThreadN=0;ThreadN<ThreadsN;ThreadN++){
             Threads[ThreadN].join();
             Nonces[ThreadsN]+=Nonces[ThreadN];
-    } std::printf(" %llx",Nonces[ThreadsN]);    //Report back only the total # of nonces, after TXn. 64 threads are no faster than 8, it turns out.
+    } printf(" %llx",Nonces[ThreadsN]);    //Report back only the total # of nonces, after TXn. 64 threads are no faster than 8, it turns out.
 }

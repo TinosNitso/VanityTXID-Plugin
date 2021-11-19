@@ -87,3 +87,4 @@ int main(int argc , char **argv){
             Nonces[ThreadsN]+=Nonces[ThreadN];
     } printf(" %llx",Nonces[ThreadsN]);    //Report back only the total # of nonces, after Hash.
 }
+//

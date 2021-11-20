@@ -2,7 +2,7 @@
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
-v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash). I've figured out that 7 threads are a tiny bit faster than 8 - the last thread is useless! (I'm fairly sure 88% CPU is *slightly* more powerful than 100%.)
+v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash). 7 threads can be a tiny bit faster than 8.
 
 SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue can arise on all 3 OSs.
 
@@ -21,6 +21,8 @@ Windows project files with working example parameters are included, so others ca
 Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox gives good hash rates for all OSs. I did a native Linux test and speed as the same as for WIN10, so Code::Blocks' MinGW is probably fine.
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
+
+Next version should handle file extensions of any length (eg .py) instead of only 3 or 4 long, without only appending '(VanityHash)'. There's an issue where "vanitized" .cpp or .py code won't compile without // or # specially placed at file end. There should be a QCheckBox lock on the Script input.
 
 v1.6.0: SHA256 Checksum: **00003449a1e19a94d82dc7185c1845802c6c3c8aebd67e8083243f5415d9dde1** (0.4 kH/s · 7 mins)
 - VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 0000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of the file.

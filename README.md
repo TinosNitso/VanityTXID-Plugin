@@ -1,5 +1,7 @@
 # VanityTXID-Plugin
  
+The file size limit for hashing is actually only 2MiB, not 2GiB! Next version should have a QCheckBox lock on the Script input, and drag-&-drop for files. There's an issue when vanitizing a plain text file like .cpp or .py, because appending a nonce is adding characters to the document. Such files can be checked afterward.
+ 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 
 v1.5.0 screenshot used nonce '07000000006e2b40', corresponding to the 8th thread. with hash rate 1.2 MH/s for 394B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of VanitygenCash). 7 threads can be a tiny bit faster than 8.
@@ -21,8 +23,6 @@ Windows project files with working example parameters are included, so others ca
 Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox gives good hash rates for all OSs. I did a native Linux test and speed as the same as for WIN10, so Code::Blocks' MinGW is probably fine.
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
-
-Next version should have a QCheckBox lock on the Script input, and drag-&-drop for files. There's an issue when vanitizing a plain text file like .cpp or .py, because appending a nonce is adding characters to the document. Check before & after vanitizing such files, that they still make sense & compile.
 
 v1.6.0: SHA256 Checksum: **00003449a1e19a94d82dc7185c1845802c6c3c8aebd67e8083243f5415d9dde1** (0.4 kH/s · 7 mins)
 - VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 0000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of the file.

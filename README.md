@@ -22,7 +22,7 @@ Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 
-Next version should handle file extensions of any length (eg .py) instead of only 3 or 4 long, without only appending '(VanityHash)'. There's an issue where "vanitized" .cpp or .py code won't compile without // or # specially placed at file end. There should be a QCheckBox lock on the Script input.
+Next version should have a QCheckBox lock on the Script input. There's an issue when vanitizing a plain text document like .cpp or .py, because appending a nonce changes the text itself. Before vanitizing such files, they should have a message at the end.
 
 v1.6.0: SHA256 Checksum: **00003449a1e19a94d82dc7185c1845802c6c3c8aebd67e8083243f5415d9dde1** (0.4 kH/s · 7 mins)
 - VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 0000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of the file.

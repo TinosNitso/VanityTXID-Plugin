@@ -1,6 +1,6 @@
 # VanityTXID-Plugin
  
-The file size limit for v1.6.0 is actually only 2MiB, not 2GiB! Next version will fix this by properly allocating memory in each thread (I've successfully tested over half a GigaByte). Next version should have a QCheckBox lock on the Script input, and drag-&-drop for files. There's an issue when vanitizing a plain text file like .cpp or .py, because appending a nonce is adding characters to the document. Such files can be checked afterward.
+The file size limit for v1.6.0 is actually only ~2MB, not ~2GB! Next version will fix this by properly allocating memory in each thread (I've successfully tested over a GigaByte, but only using 1 thread due to RAM limit). Next version should have a QCheckBox lock on the Script input, and drag-&-drop for files. There's an issue when vanitizing a plain text file like .cpp or .py, because appending a nonce is adding characters to the document. Such files can be checked afterward.
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 

@@ -1,6 +1,8 @@
 # VanityTXID-Plugin
  
-The file size limit for v1.6.0 is actually only ~2MB, not ~2GB! Next version will fix this by properly allocating memory in each thread (I've successfully tested over a GigaByte, but only using 1 thread due to RAM limit). There will be a QCheckBox lock on the Script input, drag-&-drop for a file, more animated icons, more elegant Python with a bugfix or two. There might be multi-file input too (vanitizing NFT collections overnight etc). There's an issue when vanitizing a plain text file like .cpp or .py, because appending a nonce is adding characters to the document. Such files can be checked afterward.
+Unfortunately v1.6.0 doesn't work with EC SLP Ed. v3.6.6. I didn't check. It doesn't allow zip comments or tails, eg from using WinRAR. Next version will scour every file for a password like "VanityHashNonceF" and, if found, vary only those exact Bytes, without adding any tail (renewed support for v3.6.6). 
+
+The file size limit for v1.6.0 is actually only ~2MB, not ~2GB! Next version will fix this by properly allocating memory in each thread (I've successfully tested 1.7GB using 2 Threads). There will be a QCheckBox lock on the Script input, drag-&-drop for many files, more animated icons, more elegant Python with a bugfix or two. Instead of renaming files, will just create new folder when needed. There's an issue when vanitizing a plain text file like .cpp or .py, because appending a nonce is adding characters to the document. Such files can be checked afterward.
  
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.0.png)
 

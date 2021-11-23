@@ -1,7 +1,7 @@
 {
     "display_name": "VanityTXID",
-    "version": "1.6.0",
-    "description": "Generate vanity SHA256 checksums (select file), P2SH CashAddresses & txn IDs. The P2SH address gets imported into a watching-only wallet, from which raw TX hex is copied back to the original wallet, to be signed & mined. Wallet Contacts (or wallets) should be backed up.",
+    "version": "1.6.1",
+    "description": "Generate vanity SHA256 checksums (select files), P2SH CashAddresses & txn IDs. The P2SH address gets imported into a watching-only wallet, from which raw TX hex is copied back to the original wallet, to be signed & mined. Wallet Contacts (or wallets) should be backed up.",
     "project_url": "https://github.com/TinosNitso/VanityTXID-Plugin",
     "minimum_ec_version": "3.6",
     "package_name": "VanityTXID",

@@ -11,17 +11,16 @@ uint8_t* FromHex(std::string Hex){  //Some claim std::stringstream is "slow", so
     return Return;
 }
 const uint8_t CashAddrList[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,0,10,17,21,20,26,30,7,5,0,0,0,0,0,0,0,29,0,24,13,25,9,8,23,0,18,22,31,27,19,0,1,0,3,16,11,28,12,14,6,4,2,0,0,0,0,0,0,29,0,24,13,25,9,8,23,0,18,22,31,27,19,0,1,0,3,16,11,28,12,14,6,4,2};
-void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
+void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonce, char **argv) {
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
     uint8_t* NoncePos=FromHex(argv[2]);
     const int16_t Pos=NoncePos[0]<<8 | NoncePos[1];    //520B SSize limit.
 
     std::string String=std::string(argv[3]);
     const uint8_t Bytes=(2+(String.length()-2)*5)/8+bool(String.length()%8);   //How many Bytes do we need to check? The last one gets shifted by 1->7 unless Pattern 8 or 16 long.
-    uint8_t Pattern[Bytes];
-    Pattern[0]=0;
+    uint8_t* Pattern=new uint8_t[Bytes]();
     int8_t Byte=0;
-    int8_t Shift=11;    //Bit-Shift amount btwn 0 & 7. 11 is just an initialization to get the 1st 2b right (q, p, z or r).
+    char Shift=11;    //Bit-Shift amount btwn 0 & 7. 11 is just an initialization to get the 1st 2b right (q, p, z or r).
     String.erase(0,1);  //1st 'p' is irrelevant.
     for (uint8_t Char: String){
         if(Shift>=5){
@@ -41,8 +40,8 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
 
     CSHA256 SHA256C;
     CRIPEMD160 RIPEMD160C;
-    uint8_t SHA256[32];
-    uint8_t RIPEMD160[20];
+    uint8_t* SHA256=new uint8_t[32];
+    uint8_t* RIPEMD160=new uint8_t[20];
     do{do{do{do{do{do{do{do{
         SHA256C.Reset().Write(Script,SSize).Finalize(SHA256);
         RIPEMD160C.Reset().Write(SHA256,32).Finalize(RIPEMD160);
@@ -51,10 +50,11 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
             if (Pattern[Byte] != RIPEMD160[Byte]) goto Continue;
         if (Pattern[Byte] != RIPEMD160[Byte]>>Shift) goto Continue;  //Shift out irrelevant bits at the end (checks final byte even when bit-shifting by zero).
         if(*Bool) goto Finish;  //Double check.
+
         *Bool=true;
         for (int16_t Ind=0;Ind<SSize;Ind++) printf("%02x", Script[Ind]);
-        Continue:
-        if(*Bool) goto Finish;
+
+        Continue: if(*Bool) goto Finish;
     Script[Pos+7]++;}while(Script[Pos+7]);    //This byte changes the most.
     Script[Pos+6]++;}while(Script[Pos+6]);
     Script[Pos+5]++;}while(Script[Pos+5]);
@@ -65,21 +65,21 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     Script[Pos]+=ThreadsN;}while(Script[Pos]>=ThreadsN);    //Finish if passed 255.
 
     Finish:
-        *Nonces=(uint64_t) Script[Pos]/ThreadsN <<8*7;
-        for (Byte=1;Byte<8;Byte++) *Nonces |= (uint64_t) Script[Pos+Byte]<<8*(7-Byte);
+        *Nonce=(uint64_t) Script[Pos]/ThreadsN <<8*7;
+        for (Byte=1;Byte<8;Byte++) *Nonce |= (uint64_t) Script[Pos+Byte]<<8*(7-Byte);
 }
 int main(int argc , char **argv){
     if (argc < 5) {
-        fprintf(stderr, "Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
+        printf("Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
         getchar(); //If anyone double clicks on exe, they can read the message.
-        return 1;
+        return 0;
     }
     bool Bool=false;    //Bool flips when finished.
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
-    int16_t ThreadN;
-    uint64_t Nonces[ThreadsN+1];    //Most threads will dump simultaneously which can misreport hash rate, unless an array is used.
-    std::thread Threads[ThreadsN];
-    for (ThreadN=0;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,&Bool,&Nonces[ThreadN],argv);
+    int16_t ThreadN=0;
+    uint64_t* Nonces=new uint64_t[ThreadsN+1];    //Most threads will dump simultaneously which can misreport hash rate, unless an array is used.
+    std::thread* Threads=new std::thread[ThreadsN];
+    for (;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,&Bool,&Nonces[ThreadN],argv);
 
     Nonces[ThreadsN]=ThreadsN; //Sum total in final element. All threads misreport nonce total by 1, because that's simpler.
     for (ThreadN=0;ThreadN<ThreadsN;ThreadN++){

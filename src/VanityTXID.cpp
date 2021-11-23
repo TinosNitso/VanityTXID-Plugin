@@ -9,7 +9,7 @@ uint8_t* FromHex(std::string Hex){  //Some claim std::stringstream is "slow", so
     if (Len%2) Return[Len>>1]=hexList[(uint8_t)Hex.back()];
     return Return;
 }
-void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
+void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonce, char **argv) {
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
     uint8_t* NoncePos=FromHex(argv[2]);
     const int Pos=NoncePos[0]<<16 | NoncePos[1]<<8 | NoncePos[2];   //Pos may need 3B for large TXn.
@@ -22,7 +22,7 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     TXn[Pos]=ThreadN;   //This byte encodes the winning thread.
 
     CSHA256 SHA256C;
-    uint8_t SHA256[32];
+    uint8_t* SHA256=new uint8_t[32];
     int8_t CheckByte;
     do{do{do{do{do{do{do{do{    //'for' loops can't get to byte value 255, and cause hash rate miscalculations (1% over).
         SHA256C.Reset().Write(TXn,TXSize).Finalize(SHA256);
@@ -47,20 +47,20 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonces, char **argv) {
     TXn[Pos]+=ThreadsN;}while(TXn[Pos]>=ThreadsN);    //Finish if passed 255.
 
     Finish:
-        *Nonces=(uint64_t) TXn[Pos]/ThreadsN <<8*7;
-        for (CheckByte=1;CheckByte<8;CheckByte++) *Nonces |= (uint64_t) TXn[Pos+CheckByte]<<8*(7-CheckByte);
+        *Nonce=(uint64_t) TXn[Pos]/ThreadsN <<8*7;
+        for (CheckByte=1;CheckByte<8;CheckByte++) *Nonce |= (uint64_t) TXn[Pos+CheckByte]<<8*(7-CheckByte);
 }
 int main(int argc , char **argv){
     if (argc < 5) {
-        fprintf(stderr, "Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
+        printf("Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
         getchar(); //If anyone double clicks on exe, they can read the message.
-        return 1;
+        return 0;
     }
     bool Bool=false;    //Bool flips when finished.
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
     int16_t ThreadN;
-    uint64_t Nonces[ThreadsN+1];
-    std::thread Threads[ThreadsN];
+    uint64_t* Nonces=new uint64_t[ThreadsN+1];
+    std::thread* Threads=new std::thread[ThreadsN];
     for (ThreadN=0;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,&Bool,&Nonces[ThreadN],argv);
 
     Nonces[ThreadsN]=ThreadsN; //Sum total in final element. All threads misreport nonce total by 1, because that's simpler.

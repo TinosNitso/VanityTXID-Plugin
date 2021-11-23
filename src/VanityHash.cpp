@@ -10,30 +10,24 @@ uint8_t* FromHex(std::string Hex){  //Some claim std::stringstream is "slow", so
     if (Len%2) Return[Len>>1]=hexList[(uint8_t)Hex.back()];
     return Return;
 }
-void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonce, char* chars, const int Pos, char **argv) {
+void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonce, char* chars, const int Pos, const int gcount, char **argv) {
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
     const char PatternLen=std::string(argv[2]).length();
     const uint8_t* Pattern=FromHex(argv[2]);
 
-    const std::string Path=(std::string)argv[3];
-    std::string Path2=Path+"(VanityHash)";
-    int8_t Byte=4;  //Copy file extensions of 3 or 4 length. I'll improve this in a future update. There's an issue where maybe the filename is only one character?
-    if (Path[Path.length()-Byte  ]=='.')    //This code could be done for only the winning thread.
-        for (      ;Byte>0;Byte--) Path2+=Path[Path.length()-Byte];
-    if (Path[Path.length()-Byte-1]=='.')
-        for (Byte++;Byte>0;Byte--) Path2+=Path[Path.length()-Byte];
-
-    uint8_t File[Pos+8];   //Each thread should make its own, or they might interfere.
+    uint8_t* File=new uint8_t[gcount];  //Each thread should make its own, or they might interfere.
     int Int=0;
-    for (     ;Int<Pos  ;Int++) File[Int]=chars[Int];
-    File[Pos]=ThreadN;   //This byte encodes the winning thread.
-    for (Int++;Int<Pos+8;Int++) File[Int]=0;
+    for (;Int<gcount;Int++)File[Int]=chars[Int];
+    if (Int!=Pos)
+    File[Pos]=ThreadN;  //This Byte encodes the winning thread.
+    for (Int=Pos+1;Int<Pos+8;Int++) File[Int]=0;
 
+    int8_t Byte;
     std::ofstream ofstream;
     CSHA256 SHA256C;
-    uint8_t SHA256[32];
+    uint8_t* SHA256 = new uint8_t[32];
     do{do{do{do{do{do{do{do{
-        SHA256C.Reset().Write(File,Pos+8).Finalize(SHA256);
+        SHA256C.Reset().Write(File,gcount).Finalize(SHA256);
         for (Byte=0;Byte<PatternLen>>1;Byte++)
             if (Pattern[Byte]!=SHA256[Byte]) goto Continue;
         if(PatternLen%2)
@@ -41,8 +35,8 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonce, char* chars, const int 
         if(*Bool) goto Finish;  //Double check.
 
         *Bool=true;
-        ofstream.open(Path2, std::fstream::binary);
-        for (int Int=0;Int<Pos+8;Int++) ofstream << File[Int];
+        ofstream.open(argv[4], std::fstream::binary);
+        for (Int=0;Int<gcount;Int++) ofstream << File[Int];
         ofstream.close();
         for (Byte=0;Byte<32;Byte++) printf("%02x", SHA256[Byte]);
 
@@ -62,24 +56,31 @@ void Hasher(uint8_t ThreadN,bool *Bool, uint64_t *Nonce, char* chars, const int 
 }
 int main(int argc , char **argv){
     if (argc < 4) {
-        std::fprintf(stderr, "Please pass 3 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
-        std::getchar(); //If anyone double clicks on exe, they can read the message.
-        return 1;
+        printf("Please pass 4 args to this program, or else use wallet plugin. Pressing 'Enter' will return. ");
+        getchar(); //If anyone double clicks on exe, they can read the message.
+        return 0;
     }
     std::ifstream ifstream(argv[3],std::fstream::binary);
-    ifstream.ignore(std::numeric_limits<int>::max() );
-    int Pos = ifstream.gcount();    //Nonce position.
-    char* chars=new char[Pos];
+    ifstream.ignore(std::numeric_limits<int>::max());
+    int gcount = ifstream.gcount();
+    char* chars=new char[gcount+8]; //Need an extra 8B allocation just in case.
     ifstream.seekg(0);
-    ifstream.read(chars,Pos);
+    ifstream.read(chars,gcount);
     ifstream.close();
 
+    std::string Nonce("VanityHashNonce");  //To use this feature, Nonce must appear somewhere in the file (e.g. .zip) to be vanitized. Otherwise we just append a tail. Unlike WinRAR, many old programs don't support tails or archive comments.
+    Nonce+="F"; //I've verified that the binary will ruin its own executable if "VanityHashNonce""F" is written on one line. It must generate its own executable Checksum.
+    int Pos = std::string(chars,chars+gcount).find(Nonce);  //Nonce position.
+    if (Pos<0){
+        Pos=gcount;
+        gcount+=8;
+    }
     bool Bool=false;    //Bool flips when finished.
     int16_t ThreadsN=FromHex(argv[1])[0]+1;
-    int16_t ThreadN;
-    uint64_t Nonces[ThreadsN+1];
-    std::thread Threads[ThreadsN];
-    for (ThreadN=0;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,&Bool,&Nonces[ThreadN],chars,Pos,argv);
+    int16_t ThreadN=0;
+    uint64_t* Nonces = new uint64_t[ThreadsN+1];
+    std::thread* Threads = new std::thread[ThreadsN];
+    for (;ThreadN<ThreadsN;ThreadN++) Threads[ThreadN]=std::thread(Hasher,ThreadN,&Bool,&Nonces[ThreadN],chars,Pos,gcount,argv);
 
     Nonces[ThreadsN]=ThreadsN; //Sum total in final element. All threads misreport nonce total by 1, because that's simpler.
     for (ThreadN=0;ThreadN<ThreadsN;ThreadN++){
@@ -87,4 +88,3 @@ int main(int argc , char **argv){
             Nonces[ThreadsN]+=Nonces[ThreadN];
     } printf(" %llx",Nonces[ThreadsN]);    //Report back only the total # of nonces, after Hash.
 }
-//

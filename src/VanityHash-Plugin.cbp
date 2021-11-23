@@ -10,7 +10,7 @@
 				<Option output="VanityHash-Plugin" prefix_auto="1" extension_auto="1" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="07 abcd Nonce.zip NonceOut.zip" />
+				<Option parameters="07 abcdef Nonce NonceVanitized" />
 				<Option projectCompilerOptionsRelation="0" />
 				<Compiler>
 					<Add option="-O3" />

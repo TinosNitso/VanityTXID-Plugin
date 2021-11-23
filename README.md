@@ -25,7 +25,7 @@ VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 
 v1.6.1: SHA256 Checksum **0000a04841563dd64bb2930ca7f296a2c152643de5b9df6c4c21c9a14d96b8eb**
 - Support for EC v3.6.6 re-enabled. v1.6.0 added a tail to its own zip, which wasn't allowed by EC-v3.6.6 (nor is adding archive comments using WinRAR). 
 - VanityHash now optionally uses a password, "VanityHashNonceF", to decide which bytes to vary, instead of just adding a tail every time.
-- All new builds with proper memory allocation. Max file size ~2GB. Unfortunately using too many threads can cause a power failure to the CPU. Each thread demands enough RAM to work a copy of the file. I've tested over 1.7GB with 4 threads (under 3 minutes for Pattern '0', but .iso would require password).
+- All new builds with proper memory allocation. Max file size ~2GB. Unfortunately using too many threads can cause a power failure to the CPU. Each thread demands enough RAM to work a copy of the file. I've tested over 1.7GB with 4 threads (under 3 minutes for Pattern '0', but .iso requires the "password" be placed somewhere within it).
 - Can now vanitize multiple files (document batch). Assumes wallet has permission to create a new folder. No files are ever renamed.
 - Drag & Drop for many files! Dropping during current process terminates the old one 1st. Files only, no folders. Drag & drop may be broken on Linux, but works fine on macOS.
 - Read-only QCheckBox for Script.

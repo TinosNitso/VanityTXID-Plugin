@@ -14,9 +14,11 @@ Generate custom SHA256 Checksums for any file. Also generate txn IDs starting wi
 
 One issue is that 0-conf doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a confidential fee. eg a new version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
 
-Windows project files with working example parameters are included, so others can build & run immediately. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86,016B+8B Nonce.
+Code::Blocks project files with working example parameters are included in the *src* folder, so others can build & run immediately, for themselves. There's a serious issue when it comes to deterministic builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86,016B+8B.
 
 Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox gives good hash rates for all OSs. I did a native Linux test and speed as the same as for WIN10, so Code::Blocks' MinGW is probably fine.
+
+[Here](https://www.blockchain.com/bch/tx/000000e29285f0f77af2b29efb48060d5ede9c48b84c8003d36472f759cff9ce) is an example of a txn spending from a vanity [address](https://www.blockchain.com/bch/address/pqqqqqqsres95zmdsrvq7pmv66cy8azeq5n7q35suu) whose Script is exactly 520B, containing 505 0-bytes (1010 0s in hex). Remember that the stack must finish with only 1 item, which can't be a vector containing only 0s. Unfortunately that exact address isn't secure, due to the custom Script I made (security just takes longer to code). An example of a 520B message with vanity TXID is [here](https://www.blockchain.com/bch/tx/00000003ace42ee6d165eb3b37d27b42703cb0a56ce2990c60a84e01e78ae6d7).
 
 Windows users can compare 64-bit to 32-bit performance by replacing all binaries manually from the zip. 64-bit binaries were 12% faster in a test (1.95/1.74).
 

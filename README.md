@@ -2,7 +2,7 @@
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.6.1.png)
 
-v1.6.1 screenshot used nonce '07000000038a0bcb', which corresponded to the 8th thread, & had hash rate 1.2 MH/s for 433B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2.0 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of [VanitygenCash](https://github.com/cashaddress/vanitygen-cash/releases/tag/0.26)).
+v1.6.1 [token](https://simpleledger.info/token/00000006be2026dc68bf896783cb05c8bf65e7d0e44d8245e458657ed427498b) genesis used nonce '07000000038a0bcb', which corresponded to the 8th thread, & had hash rate 1.2 MH/s for 433B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2.0 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of [VanitygenCash](https://github.com/cashaddress/vanitygen-cash/releases/tag/0.26)).
 
 SLP Edition versions 3.6.7-dev6 & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue can arise on all 3 OSs.
 

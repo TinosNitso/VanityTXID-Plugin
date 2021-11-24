@@ -22,6 +22,8 @@ Windows users can compare 64-bit to 32-bit performance by replacing all binaries
 
 VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks. Instead extract/copy src to home folder, then open Terminal.app, enter 'cd src', then 'g++ -std=c++17 -O3 ./VanityTXID.cpp'. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH & VanityHash.
 
+There's currently a bug when the user drags & drops multiple files **and** enters an invalid hex pattern at the same time. Will be fixed in next version. But maybe I should take a break from these updates and learn about atomic swap contracts, since those could be vanitized inside EC, like 'ppxmr...' could be generated instantly for an xmr swap contract. VanityTXID eventually needs a Command Line Interface, but other plugins can just copy the P2SH executable code. VanityP2SH doesn't use txn malleability.
+
 v1.6.1: SHA256 Checksum **0000a04841563dd64bb2930ca7f296a2c152643de5b9df6c4c21c9a14d96b8eb**
 - Support for EC v3.6.6 re-enabled. v1.6.0 added a tail to its own zip, which wasn't allowed by EC-v3.6.6 (nor is adding archive comments using WinRAR). 
 - VanityHash now optionally uses a password, "VanityHashNonceF", to decide which bytes to vary, instead of just adding a tail every time.

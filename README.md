@@ -27,9 +27,9 @@ VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 
 There's currently a bug when the user selects multiple files **and** enters an invalid hex pattern at the same time. Will be fixed in next version. 'ac7777' isn't as efficient as 'ad75', so that would shave a byte off all vanity txns. File sizes larger than 2GB might be possible. printf("%02x",...) should be improved. Base58 is conceivable. VanityTXID eventually needs a Command Line Interface.
 
 I've taken a break from updates to learn about covenant introspection. I've generated a couple vanity covenants, like *preturn*:
-https://blockchain.com/bch/address/preturn0e8y9tplrlelk7yu5av878r0nfqsguhgnrv
+https://blockchain.com/bch/address/preturnf8g0qd9pte0u4qkkvlk6t42zz2s5a9qj3r4
 
-I don't like the CashScript or Spedn compilers, so I'm writing all the **assembly** code myself. This example takes about 9 lines of elegant code. It can return whatever coin is sent to it, but only when a Schnorr sig is used by a P2PKH sender, and the fee must be exactly 8 bits. It requires three data pushes: Parent TX, preimage, & signature. Before making such covenants work fully automatic, I need to improve the code so that Schnorr isn't essential etc. The private key is 1, and the compressed public key is just the group generator. A fully operational covenant with parental introspection only requires up to 800 bytes per txn, which is nearly **half** the smallest Monero (send) txns. Technically XMR (& other) swap contracts don't require such introspection.
+The GitHub is [here](https://github.com/TinosNitso/AutoCove-Plugin). A fully operational covenant with parental introspection only requires up to 800 bytes per txn, which is just over **half** the smallest Monero (send) txns. Technically XMR (& other) swap contracts don't require such introspection.
 
 v1.6.1: SHA256 Checksum **0000a04841563dd64bb2930ca7f296a2c152643de5b9df6c4c21c9a14d96b8eb**
 - Support for EC v3.6.6 re-enabled. v1.6.0 added a tail to its own zip, which wasn't allowed by EC-v3.6.6 (nor is adding archive comments using WinRAR). 

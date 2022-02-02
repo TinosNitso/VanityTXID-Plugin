@@ -1,20 +1,20 @@
 # VanityTXID-Plugin
 
+Generate custom SHA256 Checksums for any file (either by appending an 8B tail or else targetting a string). Also generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Also generate vanity addresses for any Script (smart contract). Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the generators. To install the latest version download "VanityTXID-Plugin.zip" above, or from the latest release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
+
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.6.1.png)
 
 v1.6.1 [token](https://simpleledger.info/token/00000006be2026dc68bf896783cb05c8bf65e7d0e44d8245e458657ed427498b) genesis used nonce '07000000038a0bcb', which corresponded to the 8th thread, & had hash rate 1.2 MH/s for 433B txn. I suspect assembly code might be a few times faster than sha256.cpp (BCHN). For my i7-2600 CPU, I've read estimates ranging from 5 to 24 MH/s for an 80B block header. For 197B I get nearly 2.0 MH/s, & 6.2 MH/s is for address generation (quadruple the speed of [VanitygenCash](https://github.com/cashaddress/vanitygen-cash/releases/tag/0.26)).
 
-SLP Edition versions **3.6.7-dev6** & 3.6.7-dev5 (for macOS) don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue can arise on all 3 OSs.
+SLP Edition versions **3.6.7-dev7**+ don't use up a CPU processor in the background, unlike 3.6.6. The pre-releases also have newer code. The CPU usage issue can arise on all 3 OSs.
 
 ![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.6.0.png)
 
-![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.5.1.png)
+![alt text](https://github.com/TinosNitso/VanityTXID-Plugin/blob/main/Screenshots/v1.6.2.png)
 
-Generate custom SHA256 Checksums for any file. Also generate txn IDs starting with a specific pattern, using a standard wallet + plugin & watching-only wallet. Also generate vanity addresses for any Script (smart contract). Available for Electron Cash (incl. SLP Edition) on Windows, Linux & macOS. Written in Python, & C++ for the miner. To install the latest version download "VanityTXID-Plugin.zip" above, or from the proper release. Using this plugin users can create and send SLP tokens with custom token/txn ID, like this PoW NFT (minted in about 30secs): https://simpleledger.info/token/00000002dad1d1f7e12cb4fc6239a1223ed29470a909a8e8078ee51f1b5ae3a9
+One issue is that **0-conf** may not apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a fee. A different version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
 
-One issue is that **0-conf** doesn't apply to the TXID itself. The payment amount can't be changed, but the TXID & message can change before confirmation. If it ever fails, the contract can be improved, or else mining pools can mine the vanity TXID directly in return for a confidential fee. eg a new version can include simple nonce checksum/s, s.t. miners can't easily deduce a vanity contract is being used. A "smarter" contract could also sign 0-conf message using OP_CHECKDATASIG.
-
-Code::Blocks project files with working example parameters are included in the *src* folder, so others can build & run immediately, for themselves. There's a serious issue when it comes to **deterministic** builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86,016B+8B.
+Code::Blocks project files with working example parameters are included in the *src* folder, so others can build & run immediately, for themselves. There's a serious issue when it comes to **deterministic** builds which are verifiably identical to the source code. Checksums change with every build, whereas the exact number of Bytes stays the same, e.g. 86016B+8B.
 
 Linux requires eSpeak for TTS (enter 'sudo apt install espeak' in terminal). The latest version of VirtualBox gives good hash rates for all OSs. I did a native Linux test and speed as the same as for WIN10, so Code::Blocks' MinGW is probably fine.
 
@@ -24,9 +24,19 @@ Windows users can compare 64-bit to 32-bit performance by replacing all binaries
 
 VanityTXID.cpp & VanityTXID.rc are compiled together using -O3 -s -march=corei7 g++.exe compiler flags. Same for VanityP2SH. All .dll libraries are extracted from 'codeblocks-20.03mingw-nosetup.zip' & 'codeblocks-20.03-32bit-mingw-32bit-nosetup.zip'. Linux compiling doesn't use Icon.rc, and requires linking pthread library (-lpthread) in Code::Blocks ('sudo apt install codeblocks'). In macOS don't use Code::Blocks. Instead extract/copy src to home folder, then open Terminal.app, enter 'cd src', then 'g++ -std=c++17 -O3 ./VanityTXID.cpp'. macOS will download & install g++ if needed. Then rename the resulting 'a.out' to 'VanityTXID-Plugin' and it's ready to go inside the zip if you want to check your own build's hash rate. Same for VanityP2SH & VanityHash.
 
-There's currently a bug when the user enters an invalid hex pattern in the top box. Will be fixed in next version. There'll be difficulty labels, Message Byte counter, a bugfix for 255B Message size, CashAddr toggle connection & improved (text)/(hex) conversion. The VanityHash will use a custom target, instead of just *VanityHashNonceF*, and the VanityP2SH allows choosing Nonce @end or @start (nonce should be before OP_CODESEPARATOR).
+v1.6.2 notes:
+- Custom target for nonce placement in files (e.g. place "<#Nonce>" in a file somewhere). Only the VanityHash binaries are new.
+- P2SH nonce position at either end or start. OP_CODESEPARATOR prefers the nonce at the start. Needed for [AutoCove](https://github.com/TinosNitso/AutoCove-Plugin).
+- Difficulty labels, in MH. Divide MH by MH/s to guess time.
+- Bugfix for Message size 255B.
+- Bugfix for drag & drop in Linux.
+- CashAddr toggle connection.
+- Message Byte counter (e.g. 字 is 3B).
+- (text)/(hex) Message conversion now by highlighting the combo-box.
+- Bugfix for invalid (non-hex) checksum pattern entry.
+- SHA256 Checksum 0000888ce25d5f2dc8a84322227c345b370fd667e0a8b006ef6d7affc590fbfe (0.4 kH/s · 5mins). Update via re-install requires restarting EC.
 
-v1.6.1: SHA256 Checksum **0000a04841563dd64bb2930ca7f296a2c152643de5b9df6c4c21c9a14d96b8eb**
+v1.6.1: SHA256 Checksum 0000a04841563dd64bb2930ca7f296a2c152643de5b9df6c4c21c9a14d96b8eb
 - Support for EC v3.6.6 re-enabled. v1.6.0 added a tail to its own zip, which wasn't allowed by EC-v3.6.6 (nor is adding archive comments using WinRAR). 
 - VanityHash now optionally uses a password, "VanityHashNonceF", to decide which bytes to vary, instead of just adding a tail every time.
 - All new builds with proper memory allocation. Max file size ~2GB. Unfortunately using too many threads can cause a power failure to the CPU. Each thread demands enough RAM to work a copy of the file. I've tested over 1.7GB with 4 threads (under 3 minutes for Pattern '0', but .iso requires the "password" be placed somewhere within it).
@@ -35,8 +45,7 @@ v1.6.1: SHA256 Checksum **0000a04841563dd64bb2930ca7f296a2c152643de5b9df6c4c21c9
 - Read-only QCheckBox for Script.
 - Bugfix where the VanityHash program keeps running if someone closes the wallet (oops). Added digit to hash rate, round(_,6). Much more elegant Python script, including .join()
 - Button icons which tick only during execution. (Pausable movies...)
-- All executable & WebP files now have SHA256 checksums starting with 0000, generated using 8B tails. The plugin itself is a zip & uses the password technique instead (hash rate over 300 H/s).
-- As usual, please restart EC after uninstalling previous version. 
+- All executable & WebP files now have SHA256 checksums starting with 0000, generated using 8B tails. The plugin itself is a zip & uses the "password" technique instead (hash rate over 300 H/s).
 
 v1.6.0: SHA256 Checksum: 00003449a1e19a94d82dc7185c1845802c6c3c8aebd67e8083243f5415d9dde1 (0.4 kH/s · 7 mins)
 - VanityHash, now included, allows vanity checksums for any file. Try it out! The plugin's .zip's checksum now starts with 0000. This allows vanity checksums for Token Documents, BFP uploads, etc. Drag & drop file may be in the next version. An 8B nonce is appended to the end of the file.

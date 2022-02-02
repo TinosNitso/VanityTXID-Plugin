@@ -1,6 +1,6 @@
 #include <thread>
-#include "bitcoin-cash-node/crypto/sha256.cpp"
-#include "bitcoin-cash-node/crypto/ripemd160.cpp"
+#include "bitcoin-cash-node/src/crypto/sha256.cpp"
+#include "bitcoin-cash-node/src/crypto/ripemd160.cpp"
 
 const uint8_t hexList[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,0xA,0xB,0xC,0xD,0xE,0xF,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xa,0xb,0xc,0xd,0xe,0xf};
 uint8_t* FromHex(std::string Hex){  //Some claim std::stringstream is "slow", so I'm using hexList instead.
